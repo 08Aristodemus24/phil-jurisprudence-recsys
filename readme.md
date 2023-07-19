@@ -63,6 +63,10 @@ use https://tecoholic.github.io/ner-annotator/ for annotating organized text fil
     ]
 }
 
+5. Things to add for the main collaborative filtering recommender system:
+    a. mean adder to the predicted ratings
+    b. adder of a new user to the user-item rating matrix and user-item interaction matrix
+
 references:
 1. https://github.com/hwwang55/MKR, Multi-Task Feature Learning for Knowledge Graph Enhanced Recommendation
 Hongwei Wang, Fuzheng Zhang, Miao Zhao, Wenjie Li, Xing Xie, and Minyi Guo.
