@@ -42,6 +42,16 @@ class PhilJurisCollabFilter:
         self.cost_per_iter = []
 
     def train(self):
+        # set utility matrix Y and interaction matrix R to tf constants
+        # init params here
+
+        # start trainign loop here
+            # do forward pass
+            # pass result to cost function
+            # calculate regularizer and add to cost
+            # extract gradients
+            # apply gradients
+            # records loss
         pass
 
     def init_params(self):
