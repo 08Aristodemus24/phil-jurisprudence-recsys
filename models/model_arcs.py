@@ -4,7 +4,7 @@ from tensorflow.keras.optimizers import Adam
 import numpy as np
 
 class PhilJurisCollabFilter:
-    def __init__(self, Y, R, num_features, epochs=300, epoch_to_rec_at=50, alpha=0.003, lambda_=0.1, regularization="L2"):
+    def __init__(self, Y, R, num_features=10, epochs=300, epoch_to_rec_at=50, alpha=0.003, lambda_=0.1, regularization="L2"):
         # this is the user item utility/rating matrix of dimension n_items x n_users
         self._Y = tf.constant(Y)
 
@@ -34,29 +34,26 @@ class PhilJurisCollabFilter:
         self.history = {
             'history': {
                 'train_loss': [],
-                'train_categorical_accuracy': [],
-                'val_loss': [],
-                'val_categorical_accuracy': []
+                # 'train_categorical_accuracy': [],
+                # 'val_loss': [],
+                # 'val_categorical_accuracy': []
             },
-            'epoch': []
+            'epochs': []
         }
         self.cost_per_iter = []
 
     def train(self, show_vars=True):
-        # init params here
-        self.init_params()
-    
         # set utility matrix Y and interaction matrix R to tf constants
         Y, R = self.Y, self.R
 
-        # get newly initialized params
-        X, THETA, BETA = self.X, self.THETA, self.BETA
+        # initialize and get newly initialized params
+        X, THETA, BETA = self.init_params()
 
         # instantiate optimizer
         optimizer = Adam(learning_rate=self.alpha)
 
         for epoch in range(self.epochs):
-            with GradientTape as tape:
+            with GradientTape() as tape:
                 # multiply resulting dot products to 
                 # user-item interaction matrix R
                 logits = self.linear(X, THETA, BETA)
@@ -72,9 +69,9 @@ class PhilJurisCollabFilter:
 
             
 
-            if ((epoch % self.rec_ep_at) == 0) or (epoch == self.epochs - 1):
+            if ((epoch % self.epoch_to_rec_at) == 0) or (epoch == self.epochs - 1):
                 # record all previous values after applying gradients
-                self.history['epoch'].append(epoch)
+                self.history['epochs'].append(epoch)
                 self.history['history']['train_loss'].append(cost)
                 # self.history['history']['train_categorical_accuracy'].append(train_acc)
                 # self.history['history']['val_loss'].append(val_cost)
@@ -88,27 +85,22 @@ class PhilJurisCollabFilter:
                     pass
 
         # set new coefficients after training
+        self.X = X
         self.THETA = THETA
         self.BETA = BETA
 
         return self.history
-
-        # start trainign loop here
-            # do forward pass
-            # pass result to cost function
-            # calculate regularizer and add to cost
-            # extract gradients
-            # apply gradients
-            # records loss
 
     def init_params(self):
         # extract number of users, items, and given arbitrary number of features by user
         n_users, n_items, n_features = self.num_users, self.num_items, self.num_features
 
         # initialize random values of parameters to optimize from normal distribution
-        self.X = tf.Variable(tf.random.normal(shape=(n_items, n_features), dtype=tf.float64, name='X'))
-        self.THETA = tf.Variable(tf.random.normal(shape=(n_users, n_features), dtype=tf.float64, name='THETA'))
-        self.BETA = tf.Variable(tf.random.normal(shape=(1, n_users), dtype=tf.float64, name='BETA'))
+        X = tf.Variable(tf.random.normal(shape=(n_items, n_features), dtype=tf.float64, name='X'))
+        THETA = tf.Variable(tf.random.normal(shape=(n_users, n_features), dtype=tf.float64, name='THETA'))
+        BETA = tf.Variable(tf.random.normal(shape=(1, n_users), dtype=tf.float64, name='BETA'))
+
+        return X, THETA, BETA
 
     def linear(self, X, THETA, BETA):
         """
@@ -172,28 +164,26 @@ class PhilJurisCollabFilter:
 
     def regularizer(self, X, THETA):
         if self.regularization.upper() == "L2":
-            pass
-            # # get the square of all coefficients in each layer excluding biases
-            # # if 5 layers then loop from 0 to 3 to access all coefficients
-            # sum_sq_coeffs = tf.reduce_sum(tf.math.square(THETA))
+            # get the square of all coefficients in each layer excluding biases
+            # if 5 layers then loop from 0 to 3 to access all coefficients
+            sum_sq_params = tf.reduce_sum(tf.math.square(X)) + tf.reduce_sum(tf.math.square(THETA))
 
-            # # multiply by lambda constant then divide by 2m
-            # l2_norm = (self.lambda_ * sum_sq_coeffs) / (2 * self.num_instances)
+            # multiply by lambda constant then divide by 2
+            l2_norm = (self.lambda_ * sum_sq_params) / 2
 
-            # # return l2 norm
-            # return l2_norm
+            # return l2 norm
+            return l2_norm
 
         elif self.regularization.upper() == "L1":
-            pass
-            # # if there is only 2 layers then calculation
-            # # in loop only runs once
-            # sum_abs_coeffs = tf.reduce_sum(tf.math.abs(THETA))
+            # if there is only 2 layers then calculation
+            # in loop only runs once
+            sum_abs_params = tf.reduce_sum(tf.math.abs(X)) + tf.reduce_sum(tf.math.abs(THETA))
 
-            # # multiply by lambda constant then divide by 2m
-            # l1_norm = (self.lambda_ * sum_abs_coeffs) / (2 * self.num_instances)
+            # multiply by lambda constant then divide by 2
+            l1_norm = (self.lambda_ * sum_abs_params) / 2
 
-            # # return l1 norm
-            # return l1_norm
+            # return l1 norm
+            return l1_norm
         
         # return 0 if no regularizer is indicated
         return 0

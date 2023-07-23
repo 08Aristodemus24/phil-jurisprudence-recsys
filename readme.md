@@ -66,6 +66,16 @@ use https://tecoholic.github.io/ner-annotator/ for annotating organized text fil
 5. Things to add for the main collaborative filtering recommender system:
     a. mean adder to the predicted ratings
     b. adder of a new user to the user-item rating matrix and user-item interaction matrix
+    c. being able to update a single rated item-rating by a single user in the user-item rating matrix and the user-item interaction matrix
+    $Y_{i, j}$ is, 0.5 user turns it to 3.5, $R_{i, j}$ is 1 initially and after update $R_{i, j}$ is still 1
+    d. being able to update a single unrated item-rating by a single user in the user-item rating matrix and the user-item interaction matrix
+    $Y_{i, j}$ is, 0 user turns it to 5, $R_{i, j}$ is 0 initially and after update $R_{i, j}$ is now 1
+    d. confine ratings to only 0 or any number in the set {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5}
+    e. predictions like 0.75 should be rounded up to 1, 1.75 to 2, 2.8 to 3, 3.9 to 4, 4.85 to 5
+    f. predictions like 0.25 should be rounded down to 0, 0.499999 to 0. Basically anything than below an itnerval of 0.5 must be rounded down
+    prediction 3.25 -> 3.25 - 3 = 0.25 < 0.5 therefore round 3.25 down to 3.0
+    prediciton 3.5 -> 3.5 - 3 = 0.5 >= 0.5 therefore round 3.5 to 4.0
+
 
 references:
 1. https://github.com/hwwang55/MKR, Multi-Task Feature Learning for Knowledge Graph Enhanced Recommendation
