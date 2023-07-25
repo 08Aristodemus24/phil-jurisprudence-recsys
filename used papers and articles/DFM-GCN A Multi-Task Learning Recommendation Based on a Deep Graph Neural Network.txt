@@ -1,0 +1,1 @@
+Xiao, Yan & Li, Congdong & Liu, Vincenzo. (2022). DFM-GCN: A Multi-Task Learning Recommendation Based on a Deep Graph Neural Network. Mathematics. 10. 721. 10.3390/math10050721. 

@@ -1,7 +1,93 @@
 import tensorflow as tf
-from tensorflow import GradientTape
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.regularizers import L2
+from tensorflow import GradientTape
+
 import numpy as np
+
+class DeepFM(tf.keras.Model):
+    def __init__(self, n_users, n_items, emb_dim, layers_dims=[16, 16, 16], lambda_=1e-6, alpha=1e-3):
+        """
+        
+        """
+        super().__init__()
+        self.n_users = n_users
+        self.n_items = n_items
+
+        # hyperparams
+        self.lambda_ = lambda_
+        self.alpha = alpha
+
+        self.emb_dim = emb_dim
+        self.layers_dims = layers_dims
+        self.num_layers = len(layers_dims)
+
+        # seems to have no input shape so invetigate this
+        # initialize input layers
+        self.user_id_input = tf.keras.Input(shape=(), name='user_id', dtype=tf.int64)
+        self.item_id_input = tf.keras.Input(shape=(), name='item_id', dtype=tf.int64)
+
+        # initialize embedding and embedding bias layers
+        self.user_emb_layer = tf.keras.layers.Embedding(n_users, emb_dim, embeddings_regularizer=lambda_)
+        self.item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=lambda_)
+
+        self.user_emb_layer_bias = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+        self.item_emb_layer_bias = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+
+        # initialize dense and activation layers
+        self.dense_layers, self.act_layers = self.init_dense_act_layers()
+
+    def call(self, inputs, training=False):
+        """
+        
+        """
+        # will perform forward propagation
+        user_embedding = self.user_emb_layer(self.user_id_input)
+        item_embedding = self.item_emb_layer(self.item_id_input)
+
+        user_bias = self.user_emb_layer_bias(self.user_id_input)
+        item_bias = self.item_emb_layer_bias(self.item_id_input)
+
+        fact_matrix = tf.reduce_sum(user_embedding * item_embedding, axis=1, keepdims=True) + user_bias + item_bias
+
+        # this will be A0 or the first input layer of this deep neural network
+        A = tf.concat([user_embedding, item_embedding], axis=1)
+
+        # forward propagate through deep neural network according to number of layers
+        for l in range(self.num_layers):
+            # pass concatenated user_embedding and item embedding 
+            # to dense layer to calculate Z at layer l
+            Z = self.dense_layers[l](A)
+
+            # activate output Z layer by passing to relu activation layer
+            A = self.act_layers[l](Z)
+
+        # one linear layer
+        A = tf.keras.layers.Dense(1, kernel_regularizer=L2(self.lambda_))(A)
+
+        out = tf.keras.activations.sigmoid(fact_matrix + A)
+
+        return out
+    # return tf.keras.Model(inputs=[user_id, item_id], outputs=out)
+
+    def init_dense_act_layers(self):
+        """
+        
+        """
+        dense_layers = []
+        act_layers = []
+
+        layers_dims = self.layers_dims
+        for layer_dim in layers_dims:
+            dense_layers.append(tf.keras.layers.Dense(units=layer_dim, kernel_regularizer=L2(self.lambda_)))
+            act_layers.append(tf.keras.layers.Activation(activation=tf.nn.relu))
+
+        return dense_layers, act_layers
+
+
+        
+
+    
 
 class PhilJurisCollabFilter:
     def __init__(self, Y, R, num_features=10, epochs=300, epoch_to_rec_at=50, alpha=0.003, lambda_=0.1, regularization="L2"):

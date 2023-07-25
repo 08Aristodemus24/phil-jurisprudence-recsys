@@ -1,0 +1,1 @@
+Wang, Hongwei & Zhang, Fuzheng & Zhao, Miao & Li, Wenjie & Xie, Xing & Guo, Minyi. (2019). Multi-Task Feature Learning for Knowledge Graph Enhanced Recommendation. WWW '19: The World Wide Web Conference. 2000-2010. 10.1145/3308558.3313411. 

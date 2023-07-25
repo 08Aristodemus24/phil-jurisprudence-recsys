@@ -3,6 +3,11 @@ this is the second phase of my undergraduate thesis which will recommend jurispr
 
 
 # Model Building:
+## Hypotheses/Tests to do
+1. see shape of user input in DeepFM model
+2. test run
+3. label each line of execution in Recommender-System repository particularly in the using deepfm modle
+
 ## Labor Corpus Juris
 1. use each created and properly separated .txt files for the NER annotator
 use https://tecoholic.github.io/ner-annotator/ for annotating organized text files manually
@@ -77,8 +82,9 @@ use https://tecoholic.github.io/ner-annotator/ for annotating organized text fil
     prediciton 3.5 -> 3.5 - 3 = 0.5 >= 0.5 therefore round 3.5 to 4.0
 
 
-references:
-1. https://github.com/hwwang55/MKR, Multi-Task Feature Learning for Knowledge Graph Enhanced Recommendation
-Hongwei Wang, Fuzheng Zhang, Miao Zhao, Wenjie Li, Xing Xie, and Minyi Guo.
-In Proceedings of The 2019 Web Conference (WWW 2019)
-2. 
+## references:
+
+LINK_TO_PAPER, LINK_TO_PAPERS_GITHUB, CITATION
+1. https://www.researchgate.net/publication/333072348_Multi-Task_Feature_Learning_for_Knowledge_Graph_Enhanced_Recommendation/stats, https://github.com/hwwang55/MKR, Wang, Hongwei & Zhang, Fuzheng & Zhao, Miao & Li, Wenjie & Xie, Xing & Guo, Minyi. (2019). Multi-Task Feature Learning for Knowledge Graph Enhanced Recommendation. WWW '19: The World Wide Web Conference. 2000-2010. 10.1145/3308558.3313411. 
+
+2. https://www.researchgate.net/publication/358851413_DFM-GCN_A_Multi-Task_Learning_Recommendation_Based_on_a_Deep_Graph_Neural_Network, https://github.com/SSSxCCC/Recommender-System, Xiao, Yan & Li, Congdong & Liu, Vincenzo. (2022). DFM-GCN: A Multi-Task Learning Recommendation Based on a Deep Graph Neural Network. Mathematics. 10. 721. 10.3390/math10050721.
