@@ -7,6 +7,12 @@ this is the second phase of my undergraduate thesis which will recommend jurispr
 1. see shape of user input in DeepFM model
 2. test run
 3. label each line of execution in Recommender-System repository particularly in the using deepfm modle
+4. create data loader for movie ratings dataset
+
+
+## Questions:
+1. how do I split the data into training, validation, and testing sets?
+2. how do I batch train the model?
 
 ## Labor Corpus Juris
 1. use each created and properly separated .txt files for the NER annotator

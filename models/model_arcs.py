@@ -5,8 +5,8 @@ from tensorflow import GradientTape
 
 import numpy as np
 
-class DeepFM(tf.keras.Model):
-    def __init__(self, n_users, n_items, emb_dim, layers_dims=[16, 16, 16], lambda_=1e-6, alpha=1e-3):
+class FM(tf.keras.Model):
+    def __init__(self, n_users, n_items, emb_dim=32, lambda_=1e-6):
         """
         
         """
@@ -16,7 +16,50 @@ class DeepFM(tf.keras.Model):
 
         # hyperparams
         self.lambda_ = lambda_
-        self.alpha = alpha
+        self.emb_dim = emb_dim
+
+        # initialize input layers
+        self.user_id_input = tf.keras.Input(shape=(), name='user_id', dtype=tf.int64)
+        self.item_id_input = tf.keras.Input(shape=(), name='item_id', dtype=tf.int64)
+
+        # initialize embedding and embedding bias layers
+        self.user_emb_layer = tf.keras.layers.Embedding(n_users, emb_dim, embeddings_regularizer=L2(lambda_))
+        self.item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=L2(lambda_))
+
+        self.user_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+        self.item_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+
+        # initialize output layer
+        self.output_layer = tf.keras.layers.Activation(activation='linear')
+
+
+    def call(self, inputs, training=False):
+        user_embedding = self.user_emb_layer(self.user_id_input)
+        item_embedding = self.item_emb_layer(self.item_id_input)
+
+        user_bias = self.user_emb_bias_layer(self.user_id_input)
+        item_bias = self.item_emb_bias_layer(self.item_id_input)
+
+        print(user_bias)
+        print(item_bias)
+
+        # since it is a mere FM model only a linear calculation will be sufficient
+        x = tf.reduce_sum(user_embedding * item_embedding, axis=1, keepdims=True) + user_bias + item_bias
+        return x
+
+
+
+class DFM(tf.keras.Model):
+    def __init__(self, n_users, n_items, emb_dim=32, layers_dims=[16, 16, 16], lambda_=1e-6):
+        """
+        
+        """
+        super().__init__()
+        self.n_users = n_users
+        self.n_items = n_items
+
+        # hyperparams
+        self.lambda_ = lambda_
 
         self.emb_dim = emb_dim
         self.layers_dims = layers_dims
@@ -28,14 +71,21 @@ class DeepFM(tf.keras.Model):
         self.item_id_input = tf.keras.Input(shape=(), name='item_id', dtype=tf.int64)
 
         # initialize embedding and embedding bias layers
-        self.user_emb_layer = tf.keras.layers.Embedding(n_users, emb_dim, embeddings_regularizer=lambda_)
-        self.item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=lambda_)
+        self.user_emb_layer = tf.keras.layers.Embedding(n_users, emb_dim, embeddings_regularizer=L2(lambda_))
+        self.item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=L2(lambda_))
 
-        self.user_emb_layer_bias = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
-        self.item_emb_layer_bias = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+        self.user_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+        self.item_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
 
         # initialize dense and activation layers
         self.dense_layers, self.act_layers = self.init_dense_act_layers()
+
+        # A last
+        self.last_a_layer = tf.keras.layers.Dense(units=1, kernel_regularizer=L2(lambda_))
+
+        # output
+        self.output_layer = tf.keras.layers.Activation(activation=tf.nn.sigmoid)
+
 
     def call(self, inputs, training=False):
         """
@@ -45,8 +95,8 @@ class DeepFM(tf.keras.Model):
         user_embedding = self.user_emb_layer(self.user_id_input)
         item_embedding = self.item_emb_layer(self.item_id_input)
 
-        user_bias = self.user_emb_layer_bias(self.user_id_input)
-        item_bias = self.item_emb_layer_bias(self.item_id_input)
+        user_bias = self.user_emb_bias_layer(self.user_id_input)
+        item_bias = self.item_emb_bias_layer(self.item_id_input)
 
         fact_matrix = tf.reduce_sum(user_embedding * item_embedding, axis=1, keepdims=True) + user_bias + item_bias
 
@@ -63,11 +113,11 @@ class DeepFM(tf.keras.Model):
             A = self.act_layers[l](Z)
 
         # one linear layer
-        A = tf.keras.layers.Dense(1, kernel_regularizer=L2(self.lambda_))(A)
+        A_last = self.last_a_layer(A)
 
-        out = tf.keras.activations.sigmoid(fact_matrix + A)
+        OUT = self.output_layer(fact_matrix + A)
 
-        return out
+        return OUT
     # return tf.keras.Model(inputs=[user_id, item_id], outputs=out)
 
     def init_dense_act_layers(self):
@@ -89,7 +139,7 @@ class DeepFM(tf.keras.Model):
 
     
 
-class PhilJurisCollabFilter:
+class PhilJurisFM:
     def __init__(self, Y, R, num_features=10, epochs=300, epoch_to_rec_at=50, alpha=0.003, lambda_=0.1, regularization="L2"):
         # this is the user item utility/rating matrix of dimension n_items x n_users
         self._Y = tf.constant(Y)
@@ -239,7 +289,7 @@ class PhilJurisCollabFilter:
         Returns the mean rating in Ymean.
         """
         Ymean = (np.sum(Y * R, axis=1) / (np.sum(R, axis=1) + 1e-12)).reshape(-1, 1)
-        Ynorm = Y - np.multiply(Ymean, R) 
+        Ynorm = Y - np.multiply(Ymean, R)
         return(Ynorm, Ymean)
 
     def predict():
