@@ -16,8 +16,15 @@ def read_item_index_to_entity_id_file():
 
 
 def convert_rating():
+    """
+    converts the rating.dat file to user-item interaction dataset
+    where 1 means user has rated an item and 0 means user has not
+    rated the item
+    """
     file = '../data/' + DATASET + '/' + RATING_FILE_NAME[DATASET]
 
+    # this reads the rating file and replaces the delimiter :: in movies for exaple
+    # to 
     print('reading rating file ...')
     item_set = set(item_index_old2new.values())
     user_pos_ratings = dict()

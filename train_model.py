@@ -38,7 +38,7 @@ if __name__ == "__main__":
     # train_cross_results_v2(results=history['history'], epochs=history['epochs'], img_title='train loss of collaborative filtering SVD across epochs')
 
     # load user-item rating dataset
-    data = load_raw_ratings_large('./data/movie')
+    data = load_raw_ratings_large('./data/ml-1m')
     print(data)
     
     # model = FM()

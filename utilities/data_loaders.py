@@ -31,10 +31,14 @@ def load_Movie_List_pd(dir_path):
     return (mlist, df)
     
 def load_raw_ratings_large(dir_path):
-    file = open(f'{dir_path}/ratings_final.txt', 'rb')
-    df = pd.read_csv(file, delimiter='\t', header=None)
-    df.rename(columns={0: 'user_id', 1: 'item_id', 2: 'rating'}, inplace=True)
+    df = pd.read_csv(f'{dir_path}/ratings.dat', delimiter='::', header=None)
+    df.rename(columns={0: 'user_id', 1: 'item_id', 2: 'rating', 3: 'timestamp'}, inplace=True)
 
     return df
 
+def load_raw_kg_20k(dir_path):
+    kg = pd.read_csv(f'{dir_path}/kg.txt', sep='\t', header=None)
+    kg.rename(columns={0: 'head', 1: 'relation', 2: 'tail'}, inplace=True)
+
+    return kg
     
