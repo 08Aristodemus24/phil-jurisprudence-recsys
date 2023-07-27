@@ -1,6 +1,70 @@
 import argparse
 import numpy as np
+import pandas as pd
 
+def normalize_ratings(ratings: pd.Series):
+    # Y_mean = 
+    return
+
+
+def normalize_rating_matrix(Y, R):
+    """
+    normalizes the ratings of user-item rating matrix Y
+    note: the 1e-12 is to avoid dividing by 0 just in case
+    that items aren't at all rated by any user and the sum
+    of this user-item interaction matrix is not 0 which leads
+    to a mathematical error.
+    args:
+        Y - user-item rating matrix of (n_items x n_users) 
+        dimensionality
+
+        R - user-item interaction matrix of (n_items x n_users) 
+        dimensionality
+    """
+    Y_mean = np.sum(Y * R, axis=1) / (np.sum(R, axis=1) + 1e-12).reshape(-1)
+    Y_normed = Y - (Y_mean * R)
+    return [Y_normed, Y_mean]
+
+
+
+def is_strictly_inc_by_k(unique_ids, k):
+    """
+    checks if array values are increasing by a certain value 'k'
+    e.g. we want to check if array [1, 2, 3, 4, 5, 6, 7] is
+    strictly increasing by 1, to do this we take difference of
+    each adjacent value from 0 to n - 2, which will be |1 - 2|,
+    |2 - 3|, |3 - 4|, |4 - 5|, |5 - 6|, |6 - 7|. General formula
+    would be |unique_user_ids[i] - unique_user_ids[i + 1]. Note:
+    this would not go out of range since we only loop till n - 2
+    inclusively.
+
+    if one difference between adjacent numbers is greater than 1
+    then label as True, since values like 1 would be labeled as False.
+    Then turn each boolean value to ints of 1's or 0's then sum across
+    all samples. If sum is greater than 0 then given array did not
+    strictly increment by 'k' for all values.
+    """
+
+    return bool((np.diff(unique_ids) > k).astype(np.int64).sum())
+
+
+def build_value_to_index(unique_ids):
+    """
+    returns a dictionary mapping each unique user id to 
+    sicne there may be users where there are e.g. user 1 maps to 0
+    but user 2 may not exist so we move on to user 3 which exists
+    let's say so map this to (not 2) but 1. No matter if a user id
+    may not exist keep incrementing the index by 1 and only by 1
+    strictly.
+
+    this is akin to generating a word to index dictionary where each
+    unique word based on their freqeuncy will be mapped from indeces 1 to |V|.
+
+    args:
+        unique_user_ids - an array/vector/set of all unique user id's from
+        perhaps a ratings dataset
+    """
+    return {id: index for index, id in enumerate(unique_ids)}
 
 
 def read_item_index_to_entity_id_file():

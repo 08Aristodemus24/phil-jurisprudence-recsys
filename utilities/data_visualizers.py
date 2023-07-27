@@ -34,11 +34,11 @@ def describe_col(df, col):
 
     unique_counts = df[col].value_counts()
     print(f'count/no. of occurences of each unique {col} out of {df.shape[0]}: \n')
-    print(unique_counts)
+    # print(unique_counts)
 
     unique_ids = df[col].unique()
-    print(unique_ids)
     print(f'total unique values: {len(unique_ids)}')
+    # print(unique_ids)
 
 def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure'):
     """
@@ -85,7 +85,7 @@ def view_value_frequency(value_counts:pd.Series, colormap:str, title: str, kind:
     # get either last few words or first feww words
     data = value_counts.sort_values(ascending=True)[:limit]
     # data = value_counts.sort_index(ascending=False)[:limit]
-    print(data)
+    # print(data)
 
     cmap = cm.get_cmap(colormap)
     fig = plt.figure(figsize=(15, 10))
