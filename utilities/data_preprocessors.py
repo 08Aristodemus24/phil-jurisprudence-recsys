@@ -1,6 +1,8 @@
 import argparse
 import numpy as np
 
+
+
 def read_item_index_to_entity_id_file():
     file = '../data/' + DATASET + '/item_index2entity_id.txt'
     print('reading item index to entity id file: ' + file + ' ...')
@@ -45,6 +47,7 @@ def convert_rating():
                 user_neg_ratings[user_index_old] = set()
             user_neg_ratings[user_index_old].add(item_index)
 
+    # subsequent blocks of statemens below will create the ratings_final.txt file
     print('converting rating file ...')
     writer = open('../data/' + DATASET + '/ratings_final.txt', 'w', encoding='utf-8')
     user_cnt = 0
@@ -66,21 +69,63 @@ def convert_rating():
     print('number of users: %d' % user_cnt)
     print('number of items: %d' % len(item_set))
 
-if __name__ == "__main__":
+
+def convert_kg():
+    print('converting kg.txt file ...')
+    entity_cnt = len(entity_id2index)
+    relation_cnt = 0
+
+    writer = open('../data/' + DATASET + '/kg_final.txt', 'w', encoding='utf-8')
+    file = open('../data/' + DATASET + '/kg.txt', encoding='utf-8')
+
+    for line in file:
+        array = line.strip().split('\t')
+        head_old = array[0]
+        relation_old = array[1]
+        tail_old = array[2]
+
+        if head_old not in entity_id2index:
+            continue
+        head = entity_id2index[head_old]
+
+        if tail_old not in entity_id2index:
+            entity_id2index[tail_old] = entity_cnt
+            entity_cnt += 1
+        tail = entity_id2index[tail_old]
+
+        if relation_old not in relation_id2index:
+            relation_id2index[relation_old] = relation_cnt
+            relation_cnt += 1
+        relation = relation_id2index[relation_old]
+
+        writer.write('%d\t%d\t%d\n' % (head, relation, tail))
+
+    writer.close()
+    print('number of entities (containing items): %d' % entity_cnt)
+    print('number of relations: %d' % relation_cnt)
+
+
+if __name__ == '__main__':
     RATING_FILE_NAME = dict({'movie': 'ratings.dat',
                             'book': 'BX-Book-Ratings.csv',
                             'music': 'user_artists.dat',
                             'news': 'ratings.txt'})
     SEP = dict({'movie': '::', 'book': ';', 'music': '\t', 'news': '\t'})
     THRESHOLD = dict({'movie': 4, 'book': 0, 'music': 0, 'news': 0})
+    
+    np.random.seed(555)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', type=str, default='movie', help='which dataset to preprocess')
     args = parser.parse_args()
     DATASET = args.d
 
-    item_index_old2new = {}
     entity_id2index = {}
+    relation_id2index = {}
+    item_index_old2new = {}
 
     read_item_index_to_entity_id_file()
     convert_rating()
+    convert_kg()
+
+    print('done')
