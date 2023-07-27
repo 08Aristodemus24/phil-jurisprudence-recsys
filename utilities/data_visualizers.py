@@ -7,6 +7,13 @@ import seaborn as sb
 import networkx as nx
 
 import pandas as pd
+import tensorflow as tf
+
+def view_tensor_values(tensor):
+    """
+    converts the given keras tensor to numpy array
+    """
+    return tf.convert_to_tensor(tensor)
 
 
 def view_vars(Y, R, X, THETA, BETA):

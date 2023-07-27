@@ -2,9 +2,23 @@ import argparse
 import numpy as np
 import pandas as pd
 
-def normalize_ratings(ratings: pd.Series):
-    # Y_mean = 
-    return
+def normalize_ratings(ratings: pd.DataFrame):
+    
+    # calculate mean ratings of all unique items first
+    unique_item_ids = ratings['item_id'].unique()
+
+    # build dictionary that maps unique item id's to their respective means
+    items_means = {item_id: ratings.loc[ratings['item_id'] == item_id, 'rating'].mean() for item_id in unique_item_ids}
+
+    # build list of values for mean column of new dataframe
+    avg_rating = [items_means[item_id] for item_id in ratings['item_id']]
+
+    # create avg_rating and normed_rating columns 
+    ratings['avg_rating'] = avg_rating
+    ratings['normed_rating'] = ratings['rating'] - avg_rating
+
+    # return modified dataframe
+    return ratings
 
 
 def normalize_rating_matrix(Y, R):
@@ -14,6 +28,11 @@ def normalize_rating_matrix(Y, R):
     that items aren't at all rated by any user and the sum
     of this user-item interaction matrix is not 0 which leads
     to a mathematical error.
+
+    how this works is it takes the mean of all the user ratings
+    per item, excluding of course the rating of users who've
+    not yet rated the item
+
     args:
         Y - user-item rating matrix of (n_items x n_users) 
         dimensionality
