@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 
 def normalize_ratings(ratings: pd.DataFrame):
-    
     # calculate mean ratings of all unique items first
     unique_item_ids = ratings['item_id'].unique()
 
@@ -14,11 +13,14 @@ def normalize_ratings(ratings: pd.DataFrame):
     avg_rating = [items_means[item_id] for item_id in ratings['item_id']]
 
     # create avg_rating and normed_rating columns 
-    ratings['avg_rating'] = avg_rating
-    ratings['normed_rating'] = ratings['rating'] - avg_rating
+    temp = ratings.copy()
+    temp['avg_rating'] = avg_rating
+    temp['normed_rating'] = temp['rating'] - avg_rating
 
-    # return modified dataframe
-    return ratings
+    # return new dataframe
+    return temp
+
+
 
 
 def normalize_rating_matrix(Y, R):
