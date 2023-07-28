@@ -67,7 +67,7 @@ class FM(tf.keras.Model):
 class DFM(tf.keras.Model):
     def __init__(self, n_users, n_items, emb_dim=32, layers_dims=[16, 16, 16], lambda_=1, regularization="L2"):
         """
-        Implements the DeepFM (Deep Factorization Machine) architecture
+        Implements the DFM (Deep Factorization Machine) architecture
         """
         super().__init__()
         # number of unique users and items
