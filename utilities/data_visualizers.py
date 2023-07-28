@@ -9,6 +9,8 @@ import networkx as nx
 import pandas as pd
 import tensorflow as tf
 
+
+
 def view_tensor_values(tensor):
     """
     converts the given keras tensor to numpy array
@@ -119,6 +121,11 @@ def view_value_frequency(value_counts:pd.Series, colormap:str, title: str, kind:
 
 
 def visualize_graph(kg, limit: str=500, edge: str='film.film.genre', node_color: str='skyblue'):
+    """
+    args:
+        kg - is the knowledge graph represented as a dataframe with columns head, relation, tail
+        which are the triples that make up the knowledge graph
+    """
     # see first 500 rows
     G = nx.from_pandas_edgelist(kg[:limit].loc[kg['relation'] == edge], source='head', target='tail', edge_attr=True, create_using=nx.MultiDiGraph())
     pos = nx.spring_layout(G, k=0.5)

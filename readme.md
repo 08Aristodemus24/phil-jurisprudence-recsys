@@ -22,13 +22,20 @@ this is the second phase of my undergraduate thesis which will recommend jurispr
     c. prediction 3.25 -> 3.25 - 3 = 0.25 < 0.5 therefore round 3.25 down to 3.0
     d. prediciton 3.5 -> 3.5 - 3 = 0.5 >= 0.5 therefore round 3.5 to 4.0
 11. because initial factorization machine (FM) architecture of collaborative filtering model already exists, using the the Functional API of tensorflow by using the built-in Model class, I need to build a more tailored version of this Model class that implements this FM architecture
-
 12. I need to build DeepFM architecture, and MKR architecture of these models
 
 
 ## Questions:
 1. how do I split the data into training, validation, and testing sets?
 2. how do I batch train the model?
+3. how do I make predictions with the model
+4. how do I implement the AUC, Precision@k, Recall@k, and F1-score in this model?
+
+
+## Things I Learned:
+1. batch size can affect performance of model on validation set
+2. hyper-parameters with n_features of 32, n_epochs of 200, rec_alpha of 0.0003, --rec_lambda of 1, --regularization of "L2", and --batch_size of 8192 seem to give good baseline results for the FM (factorization machine) model
+
 
 ## Labor Corpus Juris
 1. use each created and properly separated .txt files for the NER annotator
