@@ -1,16 +1,22 @@
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.regularizers import L2
+from tensorflow.keras.regularizers import L2, L1
+from tensorflow.keras.losses import MeanSquaredError as mse_loss
+from tensorflow.keras.metrics import MeanSquaredError as mse_metric
 from tensorflow import GradientTape
 
 import numpy as np
 
+
+
 class FM(tf.keras.Model):
-    def __init__(self, n_users, n_items, emb_dim=32, lambda_=1e-6):
+    def __init__(self, n_users, n_items, emb_dim=32, lambda_=1, regularization="L2"):
         """
-        
+        Implements the Factorization Machine (FM) architecture by subclassing
+        built-in Model
         """
         super().__init__()
+        # number of unique users and items
         self.n_users = n_users
         self.n_items = n_items
 
@@ -18,34 +24,43 @@ class FM(tf.keras.Model):
         self.lambda_ = lambda_
         self.emb_dim = emb_dim
 
-        # initialize input layers
-        self.user_id_input = tf.keras.Input(shape=(), name='user_id', dtype=tf.int64)
-        self.item_id_input = tf.keras.Input(shape=(), name='item_id', dtype=tf.int64)
+        # regularization to use
+        self.regularization = L2 if regularization == "L2" else L1
 
         # initialize embedding and embedding bias layers
-        self.user_emb_layer = tf.keras.layers.Embedding(n_users, emb_dim, embeddings_regularizer=L2(lambda_))
-        self.item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=L2(lambda_))
+        self.user_emb_layer = tf.keras.layers.Embedding(n_users, emb_dim, embeddings_regularizer=self.regularization(lambda_))
+        self.item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=self.regularization(lambda_))
 
         self.user_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
-        self.item_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+        self.item_emb_bias_layer = tf.keras.layers.Embedding(n_items, 1, embeddings_initializer='zeros')
 
         # initialize output layer
-        self.output_layer = tf.keras.layers.Activation(activation='linear')
+        self.dot_layer = tf.keras.layers.Dot(axes=(2, 1))
+        self.add_layer = tf.keras.layers.Add()
 
 
     def call(self, inputs, training=False):
-        user_embedding = self.user_emb_layer(self.user_id_input)
-        item_embedding = self.item_emb_layer(self.item_id_input)
+        # catch inputs first since Model will be taking in a 2 rows of data
+        # the user_id_input which is m x 1 and item_id_input which is m x 1
+        # since one example would be one user and one item
+        user_id_input = inputs[0]
+        item_id_input = inputs[1]
 
-        user_bias = self.user_emb_bias_layer(self.user_id_input)
-        item_bias = self.item_emb_bias_layer(self.item_id_input)
+        # define forward pass            
+        user_emb = self.user_emb_layer(user_id_input)
+        item_emb = self.item_emb_layer(item_id_input)
 
-        print(user_bias)
-        print(item_bias)
+        user_emb_bias = self.user_emb_bias_layer(user_id_input)
+        item_emb_bias = self.item_emb_bias_layer(item_id_input)
 
         # since it is a mere FM model only a linear calculation will be sufficient
-        x = tf.reduce_sum(user_embedding * item_embedding, axis=1, keepdims=True) + user_bias + item_bias
-        return x
+        # which is the dot product of the two user_embedding and item_embedding vectors 
+        # plus the user_bias and item_bias scalars
+        # out = tf.linalg.matmul(user_emb, tf.transpose(item_emb, perm=[0, 2, 1])) + user_emb_bias + item_emb_bias
+        user_item_dot = self.dot_layer([user_emb, tf.transpose(item_emb, perm=[0, 2, 1])])
+        out = self.add_layer([user_item_dot, user_emb_bias, item_emb_bias])
+
+        return out
 
 
 
@@ -75,7 +90,7 @@ class DFM(tf.keras.Model):
         self.item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=L2(lambda_))
 
         self.user_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
-        self.item_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros')
+        self.item_emb_bias_layer = tf.keras.layers.Embedding(n_items, 1, embeddings_initializer='zeros')
 
         # initialize dense and activation layers
         self.dense_layers, self.act_layers = self.init_dense_act_layers()
@@ -135,7 +150,6 @@ class DFM(tf.keras.Model):
         return dense_layers, act_layers
 
 
-        
 
     
 
@@ -340,8 +354,52 @@ class PhilJurisFM:
     # add here initialization of parameters THETA, BETA, and X
 
 
+def load_fm_model(n_users, n_items, emb_dim=32, alpha=0.001, lambda_=1):
+    """
+    this model uses a simple factorization machine architecture where
+    embeddings layers are the only layers, and the learned embeddings
+    of each user and item is multiplied followed by adding the user 
+    embedding biases and item embedding biases to predict the rating
+    of the user to that item
+    """
+    # PHASE 1: model architecture definition
+    # since length of user_id is only a scalar. Input would be None, 1 or m x 1
+    user_id_input = tf.keras.Input(shape=(1,), dtype=tf.int64, name='user_id')
+    item_id_input = tf.keras.Input(shape=(1,), dtype=tf.int64, name='item_id')
 
+    # user and item embedding layer
+    user_emb_layer = tf.keras.layers.Embedding(n_users, emb_dim, embeddings_regularizer=L2(lambda_), name='user_embedding')
+    item_emb_layer = tf.keras.layers.Embedding(n_items, emb_dim, embeddings_regularizer=L2(lambda_), name='item_embedding')
 
+    # bias vector embedding layer. Note that l2 regularizer 
+    # is left our since bias coefficients aren't that all impactful
+    user_emb_bias_layer = tf.keras.layers.Embedding(n_users, 1, embeddings_initializer='zeros', name='user_embedding_bias')
+    item_emb_bias_layer = tf.keras.layers.Embedding(n_items, 1, embeddings_initializer='zeros', name='item_embedding_bias')
+
+    # output layers
+    dot_layer = tf.keras.layers.Dot(axes=(2, 1))
+    add_layer = tf.keras.layers.Add()
+
+    # PHASE 2: forward pass
+    user_emb = user_emb_layer(user_id_input)
+    item_emb = item_emb_layer(item_id_input)
+
+    user_emb_bias = user_emb_bias_layer(user_id_input)
+    item_emb_bias = item_emb_bias_layer(item_id_input)
+
+    # out = tf.linalg.matmul(user_emb, tf.transpose(item_emb, perm=[0, 2, 1])) + user_emb_bias + item_emb_bias
+    user_item_dot = dot_layer([user_emb, tf.transpose(item_emb, perm=[0, 2, 1])])
+    out = add_layer([user_item_dot, user_emb_bias, item_emb_bias])
+
+    model = tf.keras.Model(inputs=[user_id_input, item_id_input], outputs=out)
+
+    model.compile(
+        optimizer=Adam(learning_rate=alpha),
+        loss=mse_loss(),
+        metrics=[mse_metric()]
+    )
+
+    return model
         
 
         

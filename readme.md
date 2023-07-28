@@ -8,8 +8,22 @@ this is the second phase of my undergraduate thesis which will recommend jurispr
 2. test run
 3. label each line of execution in Recommender-System repository particularly in the using deepfm modle
 4. *priority* create data loader for movie ratings dataset
-- item_index2entity_id.txt 
+    a. item_index2entity_id.txt 
 5. item_index2entity_id.txt actually goes hand in hand with the knowledge graph dataset ml1m-kg1m and ml1m-kg20k
+6. mean adder to the predicted ratings
+7. adder of a new user to the user-item rating matrix and user-item interaction matrix
+8. being able to update a single rated item-rating by a single user in the user-item rating matrix and the user-item interaction matrix
+    a. $Y_{i, j}$ is, 0.5 user turns it to 3.5, $R_{i, j}$ is 1 initially and after update $R_{i, j}$ is still 1
+9. being able to update a single unrated item-rating by a single user in the user-item rating matrix and the user-item interaction matrix
+    a. $Y_{i, j}$ is, 0 user turns it to 5, $R_{i, j}$ is 0 initially and after update $R_{i, j}$ is now 1
+10. confine ratings to only 0 or any number in the set {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5}
+    a. predictions like 0.75 should be rounded up to 1, 1.75 to 2, 2.8 to 3, 3.9 to 4, 4.85 to 5
+    b. predictions like 0.25 should be rounded down to 0, 0.499999 to 0. Basically anything than below an itnerval of 0.5 must be rounded down
+    c. prediction 3.25 -> 3.25 - 3 = 0.25 < 0.5 therefore round 3.25 down to 3.0
+    d. prediciton 3.5 -> 3.5 - 3 = 0.5 >= 0.5 therefore round 3.5 to 4.0
+11. because initial factorization machine (FM) architecture of collaborative filtering model already exists, using the the Functional API of tensorflow by using the built-in Model class, I need to build a more tailored version of this Model class that implements this FM architecture
+
+12. I need to build DeepFM architecture, and MKR architecture of these models
 
 
 ## Questions:
@@ -77,17 +91,7 @@ use https://tecoholic.github.io/ner-annotator/ for annotating organized text fil
 }
 
 5. Things to add for the main collaborative filtering recommender system:
-    a. mean adder to the predicted ratings
-    b. adder of a new user to the user-item rating matrix and user-item interaction matrix
-    c. being able to update a single rated item-rating by a single user in the user-item rating matrix and the user-item interaction matrix
-    $Y_{i, j}$ is, 0.5 user turns it to 3.5, $R_{i, j}$ is 1 initially and after update $R_{i, j}$ is still 1
-    d. being able to update a single unrated item-rating by a single user in the user-item rating matrix and the user-item interaction matrix
-    $Y_{i, j}$ is, 0 user turns it to 5, $R_{i, j}$ is 0 initially and after update $R_{i, j}$ is now 1
-    d. confine ratings to only 0 or any number in the set {0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5}
-    e. predictions like 0.75 should be rounded up to 1, 1.75 to 2, 2.8 to 3, 3.9 to 4, 4.85 to 5
-    f. predictions like 0.25 should be rounded down to 0, 0.499999 to 0. Basically anything than below an itnerval of 0.5 must be rounded down
-    prediction 3.25 -> 3.25 - 3 = 0.25 < 0.5 therefore round 3.25 down to 3.0
-    prediciton 3.5 -> 3.5 - 3 = 0.5 >= 0.5 therefore round 3.5 to 4.0
+    
 
 
 ## references:
