@@ -5,7 +5,6 @@ import itertools as it
 
 
 
-
 def build_results(history, metrics: list=['loss', 'val_loss']):
     """
     builds the dictionary of results based on metric history of both models
@@ -94,17 +93,17 @@ def get_length__build_value_to_index(ratings: pd.DataFrame, column: str):
     unique_user_ids = ratings[column].unique()
     unique_user_ids.sort()
 
-    print(f"unique user id's: {unique_user_ids[:15]}")
-    print(f"do unique user id's have missing user id's? {_is_strictly_inc_by_k(unique_user_ids, 1)}")
+    print(f"unique {column}'s: {unique_user_ids[:15]}")
+    print(f"do unique {column}'s have missing {column}'s? {_is_strictly_inc_by_k(unique_user_ids, 1)}")
 
     # get number of all unique users/user id's
     n_users = unique_user_ids.shape[0]
-    print(f"number of unique users: {n_users}")
+    print(f"number of unique {column}: {n_users}")
 
     # build dictionary to map unique id's to new indeces
     user_to_index = _build_value_to_index(unique_user_ids)
     sampled = dict(it.islice(user_to_index.items(), 15))
-    print(f"sampled dictionary of all unique users mapped to their respective indeces from 0 to |n_u - 1| {sampled}")
+    print(f"sampled dictionary of all unique {column} mapped to their respective indeces from 0 to |n_{'u' if column == 'user_id' else 'i'} - 1| {sampled}")
 
     return n_users, user_to_index
 

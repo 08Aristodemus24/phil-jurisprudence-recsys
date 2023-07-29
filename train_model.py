@@ -69,7 +69,7 @@ if __name__ == "__main__":
         validation_split=0.3,
         callbacks=[EarlyStopping(monitor='val_loss', patience=3)]
     )
-    
+
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
     train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='DFM (deep factorization machine) performance')
     
