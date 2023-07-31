@@ -1,6 +1,15 @@
 # **STILL IN PRODUCTION**
 this is the second phase of my undergraduate thesis which will recommend jurisprudence documents to legal practitioners specializing in the labor sector. Based on the paper of Wang, H. et. al. 
 
+# Usage:
+1. clone repository with `git clone https://github.com/08Aristodemus24/phil-jurisprudence-recsys.git`
+2. navigate to directory with `readme.md` and `requirements.txt` file
+3. run command; `conda create -n <name of env e.g. phil-jurisprudence-recsys> python=3.10.11`. Note that 3.10.11 must be the python version otherwise packages to be installed would not be compatible with a different python version
+4. once environment is created activate it by running command `conda activate`
+5. then run `conda activate phil-jurisprudence-recsys`
+6. check if pip is installed by running `conda list -e` and checking list
+7. if it is there then move to step 8, if not then install `pip` by typing `conda install pip`
+8. if `pip` exists or install is done run `pip install -r requirements.txt` in the directory you are currently in
 
 # Model Building:
 ## Hypotheses/Tests to do
@@ -24,18 +33,15 @@ this is the second phase of my undergraduate thesis which will recommend jurispr
 11. because initial factorization machine (FM) architecture of collaborative filtering model already exists, using the the Functional API of tensorflow by using the built-in Model class, I need to build a more tailored version of this Model class that implements this FM architecture
 12. I need to build DeepFM architecture, and MKR architecture of these models
 
-
 ## Questions:
 1. how do I split the data into training, validation, and testing sets?
 2. how do I batch train the model?
 3. how do I make predictions with the model
 4. how do I implement the AUC, Precision@k, Recall@k, and F1-score in this model?
 
-
 ## Things I Learned:
 1. batch size can affect performance of model on validation set
 2. hyper-parameters with n_features of 32, n_epochs of 200, rec_alpha of 0.0003, --rec_lambda of 1, --regularization of "L2", and --batch_size of 8192 seem to give good baseline results for the FM (factorization machine) model
-
 
 ## Labor Corpus Juris
 1. use each created and properly separated .txt files for the NER annotator
@@ -99,10 +105,7 @@ use https://tecoholic.github.io/ner-annotator/ for annotating organized text fil
 
 5. Things to add for the main collaborative filtering recommender system:
     
-
-
 ## references:
-
 LINK_TO_PAPER, LINK_TO_PAPERS_GITHUB, CITATION
 1. https://www.researchgate.net/publication/333072348_Multi-Task_Feature_Learning_for_Knowledge_Graph_Enhanced_Recommendation/stats, https://github.com/hwwang55/MKR, Wang, Hongwei & Zhang, Fuzheng & Zhao, Miao & Li, Wenjie & Xie, Xing & Guo, Minyi. (2019). Multi-Task Feature Learning for Knowledge Graph Enhanced Recommendation. WWW '19: The World Wide Web Conference. 2000-2010. 10.1145/3308558.3313411. 
 
