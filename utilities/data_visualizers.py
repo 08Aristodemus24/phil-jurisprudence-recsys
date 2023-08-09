@@ -76,7 +76,7 @@ def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure')
     # delete figure
     del figure
 
-def view_value_frequency(value_counts:pd.Series, colormap:str, title: str, kind: str='barh', limit: int=6):
+def view_value_frequency(value_counts:pd.Series, colormap:str, title: str, kind: str='barh', limit: int=6, order='ASC'):
     """
     plots either a horizontal bar graph to display frequency of words top 'limit' 
     words e.g. top 20 or a pie chart to display the percentages of the top 'limit' 
@@ -103,7 +103,7 @@ def view_value_frequency(value_counts:pd.Series, colormap:str, title: str, kind:
     
     
     if kind == 'barh':        
-        axis.barh(data.index, data.values, color=cmap(np.linspace(0, 1, len(data))))
+        axis.barh([str(index) for index in data.index], data.values, color=cmap(np.linspace(0, 1, len(data))))
         # axis = value_counts[:limit].sort_values(ascending=True).plot(kind='barh', colormap='viridis')
         
         axis.set_xlabel('frequency')

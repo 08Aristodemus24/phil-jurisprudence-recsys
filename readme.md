@@ -13,9 +13,9 @@ this is the second phase of my undergraduate thesis which will recommend jurispr
 
 # Model Building:
 ## Hypotheses/Tests to do
-1. see shape of user input in DeepFM model
-2. test run
-3. label each line of execution in Recommender-System repository particularly in the using deepfm modle
+1. <s>see shape of user input in DeepFM model</s>
+2. <s>test run</s>
+3. <s>label each line of execution in Recommender-System repository particularly in the using deepfm model</s>
 4. *priority* create data loader for movie ratings dataset
     a. item_index2entity_id.txt 
 5. item_index2entity_id.txt actually goes hand in hand with the knowledge graph dataset ml1m-kg1m and ml1m-kg20k

@@ -1,0 +1,1 @@
+Wang, Hongwei & Zhao, Miao & Xie, Xing & Li, Wenjie & Guo, Minyi. (2019). Knowledge Graph Convolutional Networks for Recommender Systems. 10.1145/3308558.3313417. 

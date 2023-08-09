@@ -148,7 +148,15 @@ def _build_value_to_index(unique_ids):
     return {id: index for index, id in enumerate(unique_ids)}
 
 
+
+"""
+FOLLOWING FUNCTIONS WILL PROBABLY BE IMPORTATNT SINCE IT WILL BE USED IN PROCESSING THE KNOWLEDGE
+GRAPH AS WELL AS THE
+"""
 def read_item_index_to_entity_id_file():
+    """
+    
+    """
     file = '../data/' + DATASET + '/item_index2entity_id.txt'
     print('reading item index to entity id file: ' + file + ' ...')
     i = 0
@@ -178,10 +186,16 @@ def convert_rating():
     for line in open(file, encoding='utf-8').readlines()[1:]:
         array = line.strip().split(SEP[DATASET])
 
-        # remove prefix and suffix quotation marks for BX dataset
+        """
+        remove prefix and suffix quotation marks for BX dataset
+        """
         if DATASET == 'book':
             array = list(map(lambda x: x[1:-1], array))
 
+        """
+        EXTRACTS ITEM ID/INDEX AND IF IT IS NOT IN THE ITEM_INDEX_OLD2NEW DICTIONARY
+        THEN WE GO ON TO THE NEXT ITERATION. BECAUSE IF IT IS THEN THE
+        """
         item_index_old = array[1]
         if item_index_old not in item_index_old2new:  # the item is not in the final item set
             continue
@@ -190,6 +204,13 @@ def convert_rating():
         user_index_old = int(array[0])
 
         rating = float(array[2])
+
+        """
+        THIS CODE BLOCK ORGANIZES THE RATINGS OF USERS INTO POSITIVE AND NEGATIVE RATINGS
+        BY USING A THRESHOLD VALUE FOR EACH DATASET E.G. FOR MOVIE RATINGS THRESHOLD FOR
+        LOWEST POSITIVE RATING IS 4 AND ANYTHING STRICTLY BELOW THIS WILL BE CONSIDERED
+        AS A NEGATIVE RATING, SEE THE THRESHOLD DICTIONARY BELOW
+        """
         if rating >= THRESHOLD[DATASET]:
             if user_index_old not in user_pos_ratings:
                 user_pos_ratings[user_index_old] = set()
@@ -199,7 +220,9 @@ def convert_rating():
                 user_neg_ratings[user_index_old] = set()
             user_neg_ratings[user_index_old].add(item_index)
 
-    # subsequent blocks of statemens below will create the ratings_final.txt file
+    """
+    subsequent blocks of statemens below will create the ratings_final.txt file
+    """
     print('converting rating file ...')
     writer = open('../data/' + DATASET + '/ratings_final.txt', 'w', encoding='utf-8')
     user_cnt = 0
