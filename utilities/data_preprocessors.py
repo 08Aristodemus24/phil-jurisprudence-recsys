@@ -148,6 +148,18 @@ def _build_value_to_index(unique_ids):
     return {id: index for index, id in enumerate(unique_ids)}
 
 
+def split_into_train_val_test(data):
+    """
+    splits the dataframe or numpy array into training, validation, and testing
+    sets
+    """
+
+    
+
+
+
+
+
 
 """
 FOLLOWING FUNCTIONS WILL PROBABLY BE IMPORTATNT SINCE IT WILL BE USED IN PROCESSING THE KNOWLEDGE
