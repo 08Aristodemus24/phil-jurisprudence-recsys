@@ -39,7 +39,14 @@ This is the second phase of my undergraduate thesis which will recommend jurispr
     d. prediciton 3.5 -> 3.5 - 3 = 0.5 >= 0.5 therefore round 3.5 to 4.0
 11. <s>because initial factorization machine (FM) architecture of collaborative filtering model already exists, using the the Functional API of tensorflow by using the built-in Model class, I need to build a more tailored version of this Model class that implements this FM architecture</s>
 12. <s>build DeepFM architecture</s>
-13. build MKR architecture
+13. <s>write MKR architecture<s>
+14. fix file structure of `Recommender-System` repository *priority*
+15. translate chinese characters `Recommender-System` repository *priority*
+a. data_loader.py
+b. kg_load.py
+c. evaluation.py
+d. decorator.py
+e. competition.py
 
 **Questions:**
 1. how do I split the data into training, validation, and testing sets?
