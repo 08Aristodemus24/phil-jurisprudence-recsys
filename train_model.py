@@ -36,6 +36,7 @@ if __name__ == "__main__":
     parser.add_argument('--epoch_to_rec_at', type=int, default=50, help='every epoch to record at')
     parser.add_argument('--rec_alpha', type=float, default=1e-4, help='learning rate of recommendation task')
     parser.add_argument('--rec_lambda', type=float, default=0.1, help='lambda value of regularization term in recommendation task')
+    parser.add_argument('--rec_keep_prob', type=float, default=1, help='lambda value of regularization term in recommendation task')
     parser.add_argument('--regularization', type=str, default="L2", help='regularizer to use in regularization term')
     parser.add_argument('--batch_size', type=int, default=4096, help='batch size')
     # parser.add_argument('--lr_kge', type=float, default=0.01, help='learning rate of KGE task')
@@ -53,7 +54,14 @@ if __name__ == "__main__":
     # history = model.train()
 
     # model = FM(n_users=n_users, n_items=n_items, emb_dim=args.n_features, lambda_=args.rec_lambda, regularization=args.regularization)
-    model = DFM(n_users=n_users, n_items=n_items, emb_dim=args.n_features, lambda_=args.rec_lambda, regularization=args.regularization)
+    
+    model = DFM(
+        n_users=n_users, 
+        n_items=n_items, 
+        emb_dim=args.n_features, 
+        lambda_=args.rec_lambda, 
+        keep_prob=args.rec_keep_prob, 
+        regularization=args.regularization)
 
     model.compile(
         optimizer=Adam(learning_rate=args.rec_alpha),
@@ -63,7 +71,7 @@ if __name__ == "__main__":
 
     history = model.fit(
         [ml_1m_ratings['user_id'], ml_1m_ratings['item_id']],
-        ml_1m_ratings['avg_rating'],
+        ml_1m_ratings['normed_rating'],
         batch_size=args.batch_size,
         epochs=args.n_epochs,
         validation_split=0.3,
