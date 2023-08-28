@@ -167,7 +167,18 @@ GRAPH AS WELL AS THE
 """
 def read_item_index_to_entity_id_file():
     """
-    
+    ...
+    5	4
+    8	5
+    10	6
+    11	7
+    12	8
+    13	9
+    ...
+
+    This is what is inside the item_id2entity_id.txt
+    where numbers on the left are the item_index
+    numbers on the right are the satori_id
     """
     file = '../data/' + DATASET + '/item_index2entity_id.txt'
     print('reading item index to entity id file: ' + file + ' ...')
