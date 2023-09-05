@@ -40,14 +40,12 @@ class FM(tf.keras.Model):
 
 
     def call(self, inputs, **kwargs):
-        if kwargs['log'] == True:
-            print(user_id_input)
-
         # catch inputs first since Model will be taking in a 2 rows of data
         # the user_id_input which is m x 1 and item_id_input which is m x 1
         # since one example would be one user and one item
         user_id_input = inputs[0]
         item_id_input = inputs[1]
+        # print(inputs)
 
         # DEFINE FORWARD PROPAGATION
         user_emb = self.user_emb_layer(user_id_input)
@@ -124,7 +122,7 @@ class DFM(tf.keras.Model):
         # since one example would be one user and one item
         user_id_input = inputs[0]
         item_id_input = inputs[1]
-        print(inputs)
+        # print(inputs)
 
         # DEFINE FORWARD PROPAGATION
 

@@ -1,6 +1,7 @@
 import argparse
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 import itertools as it
 
 
@@ -148,12 +149,21 @@ def _build_value_to_index(unique_ids):
     return {id: index for index, id in enumerate(unique_ids)}
 
 
-def split_into_train_val_test(data):
+def split_data(df: pd.DataFrame):
     """
-    splits the dataframe or numpy array into training, validation, and testing
-    sets
+    splits the given dataframe into training, cross-validation, and testing sets
     """
-    pass
+    columns = df.columns != 'rating'
+    X_trains, X_, Y_trains, Y_ = train_test_split(df[df.columns[columns]], df['rating'], test_size=0.3, random_state=0)
+    X_cross, X_tests, Y_cross, Y_tests = train_test_split(X_, Y_, test_size=0.3, random_state=0)
+
+    # reintegrate Y outputs to X inputs because the combined
+    # dataframe will be used as a whole for the normalization
+    # function
+    train_data = pd.concat([X_trains, Y_trains], axis=1)
+    cross_data = pd.concat([X_cross, Y_cross], axis=1)
+    test_data = pd.concat([X_tests, Y_tests], axis=1)
+    return train_data, cross_data, test_data
 
     
 

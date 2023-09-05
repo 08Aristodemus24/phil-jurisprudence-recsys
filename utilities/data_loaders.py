@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
+
 
 def load_precalc_params_small(dir_path):
     file = open(f'{dir_path}/small_movies_X.csv', 'rb')
@@ -60,17 +60,10 @@ def load_raw_juris_ratings_large(dir_path):
     and the synthetic rating created for that user-item interaction
     """
 
-    df = pd.read_csv(f'{dir_path}/synthesized_juris_ratings.csv', header=None, index_col=0)
+    df = pd.read_csv(f'{dir_path}/synthesized_juris_ratings.csv', index_col=0)
     
     return df
 
-def split_data(df):
-    """
-    splits the given dataframe into training, cross-validation, and testing sets
-    """
-    
-    X_trains, X_, Y_trains, Y_ = train_test_split(df, test_size=0.3, random_state=0)
-    X_cross, X_tests, Y_cross, Y_tests = train_test_split(df, test_size=0.3, random_state=0)
-    return X_trains, Y_trains, X_cross, Y_cross, X_tests, Y_tests
+
 
 
