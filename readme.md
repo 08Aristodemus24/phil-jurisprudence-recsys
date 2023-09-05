@@ -60,7 +60,12 @@ e. competition.py
 **Conclusions**
 1. 
 
+**Articles:**
+1. building a matrix factorization model and normalizing ratings: https://www.kaggle.com/code/colinmorris/matrix-factorization
+2. 
+
 **Side notes:**
+
 
 
 

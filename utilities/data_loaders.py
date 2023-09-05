@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 def load_precalc_params_small(dir_path):
     file = open(f'{dir_path}/small_movies_X.csv', 'rb')
@@ -30,15 +31,46 @@ def load_Movie_List_pd(dir_path):
     mlist = df["title"].to_list()
     return (mlist, df)
     
-def load_raw_ratings_large(dir_path):
+def load_raw_movie_ratings_large(dir_path):
+    """
+    returns df with columns of users, the items they interacted with, 
+    their rating of that item, and the timestamp in which they did so
+    """
+
     df = pd.read_csv(f'{dir_path}/ratings.dat', delimiter='::', header=None)
     df.rename(columns={0: 'user_id', 1: 'item_id', 2: 'rating', 3: 'timestamp'}, inplace=True)
 
     return df
 
 def load_raw_kg_20k(dir_path):
+    """
+    returns the knowledge graph as a dataframe of 3 columns representing
+    each triple in the knowledge graph
+    """
+
     kg = pd.read_csv(f'{dir_path}/kg.txt', sep='\t', header=None)
     kg.rename(columns={0: 'head', 1: 'relation', 2: 'tail'}, inplace=True)
 
     return kg
     
+def load_raw_juris_ratings_large(dir_path):
+    """
+    returns a the .csv file of the synthesized jurisprudence document data
+    set. Contains the columns of users, the items they "interacted with",
+    and the synthetic rating created for that user-item interaction
+    """
+
+    df = pd.read_csv(f'{dir_path}/synthesized_juris_ratings.csv', header=None, index_col=0)
+    
+    return df
+
+def split_data(df):
+    """
+    splits the given dataframe into training, cross-validation, and testing sets
+    """
+    
+    X_trains, X_, Y_trains, Y_ = train_test_split(df, test_size=0.3, random_state=0)
+    X_cross, X_tests, Y_cross, Y_tests = train_test_split(df, test_size=0.3, random_state=0)
+    return X_trains, Y_trains, X_cross, Y_cross, X_tests, Y_tests
+
+
