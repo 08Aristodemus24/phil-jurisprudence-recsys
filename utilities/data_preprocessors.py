@@ -167,7 +167,27 @@ def split_data(df: pd.DataFrame):
 
     
 
+def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: bool=False) -> (pd.DataFrame, pd.DataFrame):
+    """
+    returns two dataframes one of the negative ratings and the other the 
+    positive ratings made by a user
 
+    args:
+        ratings - 
+        threshold - 
+        with_kg - 
+    """
+    df = ratings.copy()
+
+    def helper(row):
+        rating = row['rating']
+        user_id = row['user_id']
+        item_id = row['item_id']
+
+        if rating >= threshold and user_id:
+            pass
+
+    df = df.apply(helper, axis=1)
 
 
 
