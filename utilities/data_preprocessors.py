@@ -196,8 +196,11 @@ def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: b
 FOLLOWING FUNCTIONS WILL PROBABLY BE IMPORTATNT SINCE IT WILL BE USED IN PROCESSING THE KNOWLEDGE
 GRAPH AS WELL AS THE
 """
-def read_item_index_to_entity_id_file():
+def read_item_index_to_entity_id_file(item_index2entity_id_path: str, item_index_old2new: dict, entity_id2index: dict):
     """
+    args:
+        item_index_old2new - a dictionary that will be subsequently used by the convert_ratings function
+        entity_id2index - a dictionary that will be subsequently used by the convert_kg function
     ...
     5	4
     8	5
@@ -207,105 +210,273 @@ def read_item_index_to_entity_id_file():
     13	9
     ...
 
-    This is what is inside the item_id2entity_id.txt
+    this is what is inside the item_id2entity_id.txt
     where numbers on the left are the item_index
     numbers on the right are the satori_id
     """
-    file = '../data/' + DATASET + '/item_index2entity_id.txt'
+    file = item_index2entity_id_path
     print('reading item index to entity id file: ' + file + ' ...')
     i = 0
     for line in open(file, encoding='utf-8').readlines():
         item_index = line.strip().split('\t')[0]
         satori_id = line.strip().split('\t')[1]
+
+        """THIS LINE POPULATES THE ITEM_INDEX_OLD2NEW EMPTY DICTIONARY DECLARED IN MAIN
+        AND THIS WILL CONTAIN THE KEYS OF THE UNIQUE ITEMS EXCLUSIVELY IN THE KNOWLEDGE GRAPH"""
         item_index_old2new[item_index] = i
+
+        """THIS LINE POPULATES THE ENTITY_ID2INDEX EMPTY DICTIONARY DECLARED IN MAIN
+        AND THIS WILL CONTAIN THE KEYS OF THE ID OF THE ENTITIES IN THE KNOWLEDGE GRAPH"""
         entity_id2index[satori_id] = i
         i += 1
 
+    return item_index_old2new, entity_id2index
 
-def convert_rating():
-    """
-    converts the rating.dat file to user-item interaction dataset
-    where 1 means user has rated an item and 0 means user has not
-    rated the item
-    """
-    file = '../data/' + DATASET + '/' + RATING_FILE_NAME[DATASET]
 
-    # this reads the rating file and replaces the delimiter :: in movies for exaple
-    # to 
+def convert_rating(input_rating_file_path: str, output_rating_file_path: str, threshold: int, sep: str, item_index_old2new: dict):
+    # CONVERTS THE RATING.DAT FILE TO USER-ITEM INTERACTION DATASET
+    # WHERE 1 MEANS USER HAS RATED AN ITEM HIGHER THAN THE THRESHOLD
+    # INDICATING THAT THE USER HAS A POSITIVE INTERACTION WITH THE ITEM
+    # IN OTHER WORDS THEY LIKED IT AND ANYTHING BELOW IT WILL MEANS USER
+    # HAS NOT LIKED THE ITEM OR HAS NOT RATED THE ITEM
+    file = input_rating_file_path
     print('reading rating file ...')
+
+    """
+    GETS THE VALUES OF THE ITEM_INDEX_OLD2NEW DICTIONARY WHICH IS JUST THE
+    INDECES FROM 0 TO N AND PASSES IT INTO A SET TO MAKE SURE THE ITEM_SET
+    VARIABLE ONLY CONTAINS UNIQUE VALUES
+
+    BUT CHECK AS WELL IF ITEM_SET STRICTLY INCREASES BY 1
+    """
     item_set = set(item_index_old2new.values())
-    user_pos_ratings = dict()
-    user_neg_ratings = dict()
+    print(f"item_set: {list(item_set)[:5]}")
+    print(f"item_set length: {len(item_set)}")
+    
 
+    """
+    DECLARE EMPTY USER_POS_RATINGS AND USER_NEG_RATINGS
+    OR THE DICTIONARIES THAT POSITIVE RATINGS AND NEGATIVE RATINGS 
+    """
+    user_pos_ratings = {}
+    user_neg_ratings = {}
+
+    # START READING LINES AFTER THE HEADER OF THE DATASETS THAT'S WHY WE
+    # START AT INDEX 1 AND NOT 0 SINCE 0 WOULD BE THE HEADER HOWEVER FOR 
+    # THE MOVIE DATASET BECAUSE IT DOES NOT CONTAIN ANY HEADER WE WILL 
+    # HAVE TO SKIP ONE ROW OF A USER, AN ITEM, THEIR RATING, AND THE TIMESTAMP
     for line in open(file, encoding='utf-8').readlines()[1:]:
-        array = line.strip().split(SEP[DATASET])
+        """
+        BECAUSE WE ARE READING THE RATING FILE FOR EACH LINE OF THE PERHAPS
+        MOVIE DATASET WE WILL HAVE 4 COLUMNS NAMELY THE USER_ID, ITEM_ID, RATING
+        AND THE TIMESTAMP
+        """
+        row = line.strip().split(sep)
+
+        # REMOVE PREFIX AND SUFFIX QUOTATION MARkS FOR BOOK DATASET
+        if 'book' in input_rating_file_path:
+            row = list(map(lambda x: x[1: -1], row))
 
         """
-        remove prefix and suffix quotation marks for BX dataset
+        EXTRACTS ITEM_ID/INDEX FROM THE RATING DATASET FILE
         """
-        if DATASET == 'book':
-            array = list(map(lambda x: x[1:-1], array))
+        item_index_old = row[1]
 
+        """AGAIN THIS FUNCTION DEPENDS ON THE NEWLY POPULATED ITEM_INDEX_OLD2NEW DICT
+        WHICH STILL CONTAIN THE OLD VALUES OF ITEM_INDEX2ENTITY_ID.TXT FILE AS KEYS
+        SO WHEN WE CHECK IF THE ITEM_INDEX_OLD VALUE IS ACTUALLY IN ITEM_INDEX_OLD2NEW
+        WE ARE ACTUALLY USING THOSE SAME VALUE FROM THAT FILE ONLY NOW THEY ARE KEY
+        VALUES IN THE DICTIONARY, AND WHEN WE CHECK IF A VALUE IS IN THIS DICITONARY WE
+        ARE ACTUALLY USING THE KEY LIST AS BASIS IF THIS VALUE OR ITEM_INDEX_OLD IS IN
+        THIS LIST 
+    
+        IF IT IS NOT IN THE ITEM_INDEX_OLD2NEW DICTIONARY THEN WE GO ON TO THE 
+        NEXT ITERATION. BECAUSE IF IT IS THEN THE KNOWLEDGE GRAPH DOES NOT CONTAIN
+        SUCH AN ITEM AS AN ENTITY
         """
-        EXTRACTS ITEM ID/INDEX AND IF IT IS NOT IN THE ITEM_INDEX_OLD2NEW DICTIONARY
-        THEN WE GO ON TO THE NEXT ITERATION. BECAUSE IF IT IS THEN THE
-        """
-        item_index_old = array[1]
         if item_index_old not in item_index_old2new:  # the item is not in the final item set
             continue
         item_index = item_index_old2new[item_index_old]
 
-        user_index_old = int(array[0])
+        user_index_old = int(row[0])
 
-        rating = float(array[2])
+        rating = float(row[2])
 
         """
+        ASSUMING THE ITEM OCCURS IN THE KNOWLEDGE GRAPH WITH THE LOOP NOT EXITING ITS CURRENT
+        ITERATION AND CONTINUING ONTO THE NEXT WE AGAIN MAKE THE CURRENT USER AND THEIR RATED 
+        ITEM FACE THE NEXT CONSTRAINT WHICH IS WHETHER SUCH AN ITEM WAS INDEED A POSITIVE ITEM 
+        TO THE USER
+
         THIS CODE BLOCK ORGANIZES THE RATINGS OF USERS INTO POSITIVE AND NEGATIVE RATINGS
         BY USING A THRESHOLD VALUE FOR EACH DATASET E.G. FOR MOVIE RATINGS THRESHOLD FOR
         LOWEST POSITIVE RATING IS 4 AND ANYTHING STRICTLY BELOW THIS WILL BE CONSIDERED
         AS A NEGATIVE RATING, SEE THE THRESHOLD DICTIONARY BELOW
+
+        THIS DEPENDS ON THE THRESHOLD DICTIONARY BELOW
         """
-        if rating >= THRESHOLD[DATASET]:
+        if rating >= threshold:
+            """
+            IF THE USER_ID IN THE RATING DATASET DOES NOT ALREADY EXIST YET IN OUR
+            USER_POS_RATINGS DICTIONARY CREATE A KEY VALUE PAIR WITH THE USER_ID AS
+            THE KEY AND AN EMPTY SET AS THE VALUE
+
+            THEN WE ADD THE ITEM_INDEX THAT OCCURS IN ALSO HAPPENS TO OCCUR IN THE KNOWLEDGE GRAPH
+            TO THE SET
+
+            IF USER_ID ALREADY EXISTS THEN WE JUST ADD THE CORRESPONDING ITEM_INDEX OF THIS USER
+            TO THE SET
+            """
             if user_index_old not in user_pos_ratings:
                 user_pos_ratings[user_index_old] = set()
             user_pos_ratings[user_index_old].add(item_index)
         else:
+            """
+            THIS IS ONLY FOR NEGATIVE RATINGS
+            """
             if user_index_old not in user_neg_ratings:
                 user_neg_ratings[user_index_old] = set()
             user_neg_ratings[user_index_old].add(item_index)
 
+    # print(f"user_pos_ratings: {user_pos_ratings}")
+    # print(f"user_neg_ratings: {user_neg_ratings}")
+
+
+
     """
-    subsequent blocks of statemens below will create the ratings_final.txt file
+    SUBSEQUENT BLOCKS OF STATEMENTS BELOW WILL CREATE THE RATINGS_FINAL.TXT FILE
+
+    THESE BLOCKS WILL USE THE NEWLY POPULATED USER_POS_RATINGS DICT AND 
+    USER_NEG_RATINGS DICT CONTAINING THE USER_INDECES OF THE RATING DATASET 
+    AS THE KEYS AND THE SET OF ITS UNIQUE RATED ITEMS FOR BOTH THE USER_POS_RATINGS 
+    AND USER_NEG_RATINGS_DICT
     """
     print('converting rating file ...')
-    writer = open('../data/' + DATASET + '/ratings_final.txt', 'w', encoding='utf-8')
-    user_cnt = 0
+    writer = open(output_rating_file_path, 'w', encoding='utf-8')
+    
+
+    """
+    THIS IS A DICTIONARY TO BE POPULATED USING THE USER_POS_RATINGS DICTIONARY'S
+    """
     user_index_old2new = dict()
+
+    """
+    """
+    user_cnt = 0
+
+    """
+    **ADDED BY ME**
+
+    ADD NOW A VARIABLE THAT WILL SAVE THE NEW POSITIVELY RATED ITEMS
+    OF A USER AND ALSO THEIR NEGATIVE ITEMS
+
+    WILL CONTAIN FUTURE VALUES LIKE [user 1, user 2, user 3] FOR THE 'user_index'
+    KEY [item 1, item 2, item 3] FOR THE ITEM THAT WAS RATED OR UNRATED BY THESE 
+    USERS
+    
+    MEANING USER 1 RATED ITEM 1 POSITIVELY
+    """
+    rated_unrated_items = {
+        'user_id': [],
+        'item_id': [],
+        'response': []
+    }
+
+
+
+    """
+    WE LOOP THROUGH ALL KEY-VALUE PAIRS OF THE NEWLY POPULATED AND THE REORGANIZED
+    RATINGS DATASET WHICH IS THE USER_POST_RATINGS DICTIONARY
+    """
     for user_index_old, pos_item_set in user_pos_ratings.items():
+        """
+        HERE WE CHECK IF THE 
+        """
         if user_index_old not in user_index_old2new:
             user_index_old2new[user_index_old] = user_cnt
             user_cnt += 1
         user_index = user_index_old2new[user_index_old]
 
         for item in pos_item_set:
+            rated_unrated_items['user_id'].append(user_index)
+            rated_unrated_items['item_id'].append(item)
+            rated_unrated_items['response'].append(1)
             writer.write('%d\t%d\t1\n' % (user_index, item))
+
+        """
+        HERE WE WILL FINALLY USE THE ITEM_SET SET DECLARED EARLIER IN
+        THE FUNCTION WHICH RECALL CONTAINS ALL THE UNIQUE VALUES OF THE
+        ITEM_INDEX_OLD2NEW DICTIONARY VALUES
+
+        UNWATCHED_SET HERE JUST CONTAINS THE COMPLEMENT OF THE ITEMS
+        INTERACTED POSITIVELY WITH BY A USER TO ALL THE UNIQUE VALUES
+        OF THE ITEM_SET (WHICH IS ALSO IN THE KG)
+
+        E.G. POS_ITEM_SET OF USER 1 IS [0, 5, 4, 6] AND ITEM_SET IS 
+        [0, 1, 2, 3, 4, 5, 6, 7] THEREFORE 
+        [0, 1, 2, 3, 4, 5, 6, 7] - [0, 5, 4, 6] IS {1, 2, 3, 7}
+        """
         unwatched_set = item_set - pos_item_set
+
+        """
+        AND HERE WE CHECK IF THE USER_INDEX_OLD ID VALUE IN THE POSITIVE 
+        RATING SET DICTIONARY ALSO EXISTS IN THE USER_NEG_RATINGS DICTIONARY
+        BECAUSE IF IT IS
+
+        BECAUSE THIS TELLS US THAT A USER THOUGH IT HAS POSITIVE INTERACTED
+        ITEMS CAN ALSO HAVE ITEMS THAT IT HAS NEGATIVELY INTERACTED WITH 
+        REPRESENTED THROUGH THE UESR_NEG_RATINGS DICTIONARY
+        """
         if user_index_old in user_neg_ratings:
-            unwatched_set -= user_neg_ratings[user_index_old]
+            """
+            TAKE THE UNWATCHED_SET OF A USER SAY THE ABOVE WHICH IS {1, 2, 3, 7}
+            THEN ACCESS THE USER_NEG_RATINGS OF USER_INDEX_OLD (WHICH IS BASICALLY
+            AGAIN THE UNIQUE ID OF THE USER) AND FURTHER TRY TO REDUCE THE UNWATCHED
+            OR THE UNRATED OR UNINTERACTED ITEMS OF A USER USING THE ITEM SET THEY
+            NEGATIVELY RATED.
+
+            ALTERNATIVELY user_neg_ratings[user_index_old] COULD BE SEE AS neg_item_set
+            CONTRARY TO THE ABOVE WHICH IS THE pos_item_set set.
+
+            SO FOR INSTNCE IF OUR NEG_ITEM_SET IS [1, 7, 10, 12] THEN OUR UNWATCHED_SET
+            [1, 2, 3, 7] - NEG_ITEM_SET [1, 7, 10, 12] WOULD RESULT IN {2, 3}
+            """
+            unwatched_set = unwatched_set - user_neg_ratings[user_index_old]
+
+        """
+        MY QUESTION HERE IS IF LENGTH OF UNWATCHED SET IS LESS THAN POS_ITEM_SET E.G.
+        {2, 3} FOR TEH UNWATCHED_SET AND {0, 5, 4, 6} FOR THE POSITIVELY INTERACTED WITH
+        ITEMS BY USERS THEN SHOULD WE SAMPLE 4 ITEMS FROM {2, 3} WITHOUT REPLACEMENT THEN
+        THIS WOULD RESULT IN AN ERROR E.G.
+
+        numpy.random.choice(list([2, 3]), size=4, replace=False)
+        Traceback (most recent call last):
+        File "<stdin>", line 1, in <module>
+        File "mtrand.pyx", line 965, in numpy.random.mtrand.RandomState.choice
+        ValueError: Cannot take a larger sample than population when 'replace=False'
+
+        OR IS IT ALWAYS GUARANTEED THAT THE UNWATCHED_SET HAVE GREATER ELEMENTS THAN THE
+        POS_ITEM_SET?
+        """
         for item in np.random.choice(list(unwatched_set), size=len(pos_item_set), replace=False):
+            rated_unrated_items['user_id'].append(user_index)
+            rated_unrated_items['item_id'].append(item)
+            rated_unrated_items['response'].append(0)
             writer.write('%d\t%d\t0\n' % (user_index, item))
     writer.close()
     print('number of users: %d' % user_cnt)
     print('number of items: %d' % len(item_set))
 
+    return item_set, user_pos_ratings, user_neg_ratings, rated_unrated_items
 
-def convert_kg():
+
+def convert_kg(input_kg_file_path: str, output_kg_file_path: str, entity_id2index: dict, relation_id2index: dict):
     print('converting kg.txt file ...')
     entity_cnt = len(entity_id2index)
     relation_cnt = 0
 
-    writer = open('../data/' + DATASET + '/kg_final.txt', 'w', encoding='utf-8')
-    file = open('../data/' + DATASET + '/kg.txt', encoding='utf-8')
+    writer = open(output_kg_file_path, 'w', encoding='utf-8')
+    file = open(input_kg_file_path, encoding='utf-8')
 
     for line in file:
         array = line.strip().split('\t')
@@ -313,15 +484,31 @@ def convert_kg():
         relation_old = array[1]
         tail_old = array[2]
 
+        """
+        A TRIPLE IS EXCLUDED TO BE PUT IN ENTITY_ID2INDEX IF IT IS NOT IN THE
+        ENTITY_ID2INDEX DICTIONARY WE BUILT EARLIER
+        """
         if head_old not in entity_id2index:
             continue
         head = entity_id2index[head_old]
 
+        """
+        TAILS IN KG.TXT ARE ALL TOGETHER INCLUDED IF THEY EXIST OR DON'T YET EXIST
+        IN THE ENTITY_ID2INDEX
+        DICTIONARY WE BUILT EARLIER
+
+        HERE IF A UNIQUE TAIL ID IN THE KG.TXT DOES NOT EXIST THEN IT IS COUNTED
+        AS ANOTHER ENTITY
+        """
         if tail_old not in entity_id2index:
             entity_id2index[tail_old] = entity_cnt
             entity_cnt += 1
         tail = entity_id2index[tail_old]
 
+        """
+        RELATIONS IN KG.TXT ARE ONLY INCLUDED IF THEY EXIST IN THE ENTITY_ID2INDEX
+        DICTIONARY WE BUILT EARLIER
+        """
         if relation_old not in relation_id2index:
             relation_id2index[relation_old] = relation_cnt
             relation_cnt += 1
@@ -336,12 +523,12 @@ def convert_kg():
 
 if __name__ == '__main__':
     RATING_FILE_NAME = dict({'movie': 'ratings.dat',
-                            'book': 'BX-Book-Ratings.csv',
-                            'music': 'user_artists.dat',
-                            'news': 'ratings.txt'})
+                         'book': 'BX-Book-Ratings.csv',
+                         'music': 'user_artists.dat',
+                         'news': 'ratings.txt'})
     SEP = dict({'movie': '::', 'book': ';', 'music': '\t', 'news': '\t'})
     THRESHOLD = dict({'movie': 4, 'book': 0, 'music': 0, 'news': 0})
-    
+
     np.random.seed(555)
 
     parser = argparse.ArgumentParser()
@@ -353,8 +540,36 @@ if __name__ == '__main__':
     relation_id2index = {}
     item_index_old2new = {}
 
-    read_item_index_to_entity_id_file()
-    convert_rating()
+    """
+    PHASE 1: READING ITEM_INDEX2ENTITY_ID.TXT FILE
+    """
+    # for read_item_index_to_entity_id_file function
+    item_index2entity_id_path = f'../data/{DATASET}/item_index2entity_id.txt'
+    read_item_index_to_entity_id_file(item_index2entity_id_path=item_index2entity_id_path, item_index_old2new=item_index_old2new, entity_id2index=entity_id2index)
+    
+    # since item_index_old2new will be modified in 
+    # read_item_index_to_entity_id_file test here 
+    # whether keys increment by 1 strictly
+    print(f"item_index_old2new keys: {item_index_old2new.keys()}")
+    print(f"item_index_old2new values: {item_index_old2new.values()}")
+    print(f"entity_id2index keys: {entity_id2index.keys()}")
+    print(f"entity_id2index values: {entity_id2index.values()}")
+
+    """
+    PHASE 2: PASSING RAW RATING FILE TO MULTIPLE CONSTRAINTS TO GET FINAL
+    PREPROCESSED RATING FILE DATASET
+    """
+    # for convert_rating function
+    input_rating_file_path = f'../data/{DATASET}/{RATING_FILE_NAME[DATASET]}'
+    output_rating_file_path = f'../data/{DATASET}/ratings_final.txt'
+    thresh = THRESHOLD[DATASET]
+    sep = SEP[DATASET]
+    convert_rating(input_rating_file_path=input_rating_file_path, output_rating_file_path=output_rating_file_path, threshold=thresh, sep=sep, item_index_old2new=item_index_old2new)
+
+
+    """
+    PHASE 3:
+    """
     convert_kg()
 
     print('done')
