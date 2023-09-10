@@ -41,25 +41,6 @@ This is the second phase of my undergraduate thesis which will recommend jurispr
 11. <s>because initial factorization machine (FM) architecture of collaborative filtering model already exists, using the the Functional API of tensorflow by using the built-in Model class, I need to build a more tailored version of this Model class that implements this FM architecture</s>
 12. <s>build DeepFM architecture</s>
 13. <s>write MKR architecture<s>
-14. fix file structure of `Recommender-System` repository *priority*
-15. translate chinese characters `Recommender-System` repository *priority*
-a. data_loader.py
-b. kg_load.py
-c. evaluation.py
-d. decorator.py
-e. competition.py
-
-16. create preprocess rating tomorrow to keep only positive interactions as 1 and unrated items as 0. 
-17. unwatched item set of a user (all unique values) must be equal to or greater than length of positive item set of that user. This will be a constraint we must add to avoid any future errors when sampling
-18. need to find the end result of entity_id2index after convert_kg function
-19. add logs to get_length__build_value_to_index
-20. pipeline of separate_pos_neg_ratings() function:
-a. pass ratings df, item_id string
-b. return values will have var names n_items, old_item_idx2new_item_idx
-c. for users the same thing...n_users, old_user_idx2new_user_idx
-d. use built lookup dictionaries to renew user id and item id columns
-e. pass new dataframe to separate_pos_neg_ratings() func
-f. separate pos and neg ratings based on threshold by vectorization
 
 **Questions:**
 1. how do I split the data into training, validation, and testing sets?
@@ -75,17 +56,61 @@ f. separate pos and neg ratings based on threshold by vectorization
 
 **Articles:**
 1. building a matrix factorization model and normalizing ratings: https://www.kaggle.com/code/colinmorris/matrix-factorization
-2. somehow convert each row that has a unique uswr and their corresponding rated item to a dictionary with each value as a set in a vectorized way: https://stackoverflow.com/questions/65436865/how-to-convert-dataframe-into-dictionary-of-sets
 
 **Side notes:**
 
 ## Preprocessing data:
 **Prerequisites to do:**
+1. fix file structure of `Recommender-System` repository *priority*
+2. translate chinese characters `Recommender-System` repository *priority*
+a. data_loader.py
+b. kg_load.py
+c. evaluation.py
+d. decorator.py
+e. competition.py
+
 **To do:**
+1. create preprocess rating tomorrow to keep only positive interactions as 1 and unrated items as 0. 
+2. unwatched item set of a user (all unique values) must be equal to or greater than length of positive item set of that user. This will be a constraint we must add to avoid any future errors when sampling
+3. need to find the end result of entity_id2index after convert_kg function
+4. add logs to get_length__build_value_to_index
+5. pipeline of separate_pos_neg_ratings() function:
+a. pass ratings df, item_id string
+b. return values will have var names n_items, old_item_idx2new_item_idx
+c. for users the same thing...n_users, old_user_idx2new_user_idx
+d. use built lookup dictionaries to renew user id and item id columns using `.apply()` method of dataframe
+e. pass new dataframe to `separate_pos_neg_ratings()` func
+f. separate pos and neg ratings based on threshold by vectorization
+```
+>>> import pandas as pd
+>>>
+>>> ratings = pd.DataFrame({'user_id': [2, 2, 5, 16, 16, 16, 20, 1, 1, 3, 56, 32], 'item_id': [9, 2, 4, 99, 9, 4, 9, 1, 2, 50, 21, 100], 'rating': [4, 5, 4, 5, 4, 5, 5, 5, 5, 4, 5, 5]})
+>>>
+>>> ratings.groupby('user_id')
+<pandas.core.groupby.generic.DataFrameGroupBy object at 0x000001A9759E7AF0>
+>>> ratings.groupby('user_id').agg(set)
+            item_id  rating
+user_id
+1            {1, 2}     {5}
+2            {9, 2}  {4, 5}
+3              {50}     {4}
+5               {4}     {4}
+16       {9, 99, 4}  {4, 5}
+20              {9}     {5}
+32            {100}     {5}
+56             {21}     {5}
+>>>
+```
+
 **Questions:**
+
 **Insights:**
+
 **Conclusions:**
+
 **Articles:**
+1. somehow convert each row that has a unique user and their corresponding rated item to a dictionary with each value as a set in a vectorized way: https://stackoverflow.com/questions/65436865/how-to-convert-dataframe-into-dictionary-of-sets
+
 **Side notes:**
 
 ## Analyzing embeddings
