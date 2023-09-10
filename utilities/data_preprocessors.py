@@ -6,6 +6,17 @@ import itertools as it
 
 
 
+def has_duplicates(arr: list | np.ndarray) -> bool:
+    """
+    check if list or numpy array has duplicate values
+    """
+    if type(arr) is list:
+        return len(arr) != len(list(set(arr)))
+    elif type(arr) is np.ndarray:
+        return arr.size != np.unique(arr).size
+
+
+
 def build_results(history, metrics: list=['loss', 'val_loss']):
     """
     builds the dictionary of results based on metric history of both models
@@ -23,6 +34,7 @@ def build_results(history, metrics: list=['loss', 'val_loss']):
             results[metric] = history.history[metric]
 
     return results
+
 
 
 def normalize_ratings(ratings: pd.DataFrame):
@@ -53,6 +65,7 @@ def normalize_ratings(ratings: pd.DataFrame):
     return temp
 
 
+
 def normalize_rating_matrix(Y, R):
     """
     normalizes the ratings of user-item rating matrix Y
@@ -77,6 +90,7 @@ def normalize_rating_matrix(Y, R):
     return [Y_normed, Y_mean]
 
 
+
 def get_length__build_value_to_index(ratings: pd.DataFrame, column: str):
     """
     gets all unique values given a specified column of a dataframe, 
@@ -91,34 +105,54 @@ def get_length__build_value_to_index(ratings: pd.DataFrame, column: str):
         unique values from
     """
     # get user_id unique values and sort them
-    unique_user_ids = ratings[column].unique()
-    unique_user_ids.sort()
+    unique_ids = ratings[column].unique()
+    unique_ids.sort()
 
-    print(f"unique {column}'s: {unique_user_ids[:15]}")
-    print(f"do unique {column}'s have missing {column}'s? {_is_strictly_inc_by_k(unique_user_ids, 1)}")
+    print(f"unique {column}'s: {unique_ids[:15]}")
+    print(f"do unique {column}'s have missing {column}'s? {_is_strictly_inc_by_k(unique_ids, 1)}")
 
     # get number of all unique users/user id's
-    n_users = unique_user_ids.shape[0]
+    n_users = unique_ids.shape[0]
     print(f"number of unique {column}: {n_users}")
 
     # build dictionary to map unique id's to new indeces
-    user_to_index = _build_value_to_index(unique_user_ids)
-    sampled = dict(it.islice(user_to_index.items(), 15))
+    vals_to_index = _build_value_to_index(unique_ids)
+    sampled = _sample_first_n(vals_to_index, 15)
     print(f"sampled dictionary of all unique {column} mapped to their respective indeces from 0 to |n_{'u' if column == 'user_id' else 'i'} - 1| {sampled}")
 
-    return n_users, user_to_index
+    return n_users, vals_to_index
 
 
-def _is_strictly_inc_by_k(unique_ids, k):
+
+def _sample_first_n(sample_dict: dict, first_n: int=15):
+    """
+    args:
+        sample_dict - dictionary containing key-value pairs that will
+        be used to sample its first n elements
+
+        first_n - number of first items to sample in sample_dict, e.g.
+        a first_n of 15 will take the first 15 key-value pairs of 
+        sample_dict
+    """
+    sampled = dict(it.islice(sample_dict.items(), first_n))
+    return sampled
+
+
+
+def _is_strictly_inc_by_k(unique_ids: list | pd.Series, k: int):
     """
     checks if array values are increasing by a certain value 'k'
     e.g. we want to check if array [1, 2, 3, 4, 5, 6, 7] is
     strictly increasing by 1, to do this we take difference of
-    each adjacent value from 0 to n - 2, which will be |1 - 2|,
-    |2 - 3|, |3 - 4|, |4 - 5|, |5 - 6|, |6 - 7|. General formula
+    each adjacent value from 0 to n - 2, which will be |2 - 1|,
+    |3 - 2|, |4 - 3|, |5 - 4|, |6 - 5|, |7 - 6|. General formula
     would be |unique_user_ids[i] - unique_user_ids[i + 1]. Note:
     this would not go out of range since we only loop till n - 2
     inclusively.
+
+    Count also negative values e.g. if |1 - 2| then this would be
+    negative meaning array does not strictly increment for isntance
+    by 1
 
     if one difference between adjacent numbers is greater than 1
     then label as True, since values like 1 would be labeled as False.
@@ -127,7 +161,28 @@ def _is_strictly_inc_by_k(unique_ids, k):
     strictly increment by 'k' for all values.
     """
 
-    return bool((np.diff(unique_ids) > k).astype(np.int64).sum())
+    # keys would be a list of strings ints so convert to 
+    converted = list(map(int, unique_ids))
+    # print(converted[:15])
+    
+    # true values are if difference are exactly equal to k e.g.
+    # [true, true, false] -> [false, false, true]. If one is true
+    # then 1 diff is not equal to k meaning two values did not 
+    # strictly increment by k
+
+    # [false, false, true] -> [true, true, false] there are still 
+    # 2 "false" values due to initial array before negation
+
+    # [true, true, true] -> [false, false, false] no "false" before 
+    # negation values and when all added after negation is exactly zero
+    # meaning false, thus array elements increments strictly by k
+    negated_bools = ~(np.diff(converted) == k)
+
+    # returns true if the sum is greater than or less than 0
+    # because any value < 0 or > 0 is a non-zero value, and a zero
+    # value is simply a false value
+    return not bool(negated_bools.astype(np.int64).sum())
+
 
 
 def _build_value_to_index(unique_ids):
@@ -149,6 +204,7 @@ def _build_value_to_index(unique_ids):
     return {id: index for index, id in enumerate(unique_ids)}
 
 
+
 def split_data(df: pd.DataFrame):
     """
     splits the given dataframe into training, cross-validation, and testing sets
@@ -165,7 +221,7 @@ def split_data(df: pd.DataFrame):
     test_data = pd.concat([X_tests, Y_tests], axis=1)
     return train_data, cross_data, test_data
 
-    
+
 
 def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: bool=False) -> (pd.DataFrame, pd.DataFrame):
     """
@@ -178,16 +234,11 @@ def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: b
         with_kg - 
     """
     df = ratings.copy()
+    
+    bools = df['rating'] >= threshold
 
-    def helper(row):
-        rating = row['rating']
-        user_id = row['user_id']
-        item_id = row['item_id']
-
-        if rating >= threshold and user_id:
-            pass
-
-    df = df.apply(helper, axis=1)
+    pos_ratings = df.iloc[bools]
+    neg_ratings = df.iloc[~bools]
 
 
 

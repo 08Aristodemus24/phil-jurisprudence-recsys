@@ -65,5 +65,14 @@ def load_raw_juris_ratings_large(dir_path):
     return df
 
 
+def load_item_index2entity_id_file(dir_path):
+    """
+    returns the dataframe of the mappings of item_id's in the raw rating file
+    to the head entities in the knowledge graph
+    """
+    
+    item_index2entity_id = pd.read_csv(f'{dir_path}/item_index2entity_id.txt', sep='\t', header=None)
+    item_index2entity_id.rename(columns={0: 'item_index', 1: 'entity_id'}, inplace=True)
 
+    return item_index2entity_id
 
