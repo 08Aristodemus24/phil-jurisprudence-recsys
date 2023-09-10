@@ -15,7 +15,8 @@ This is the second phase of my undergraduate thesis which will recommend jurispr
 
 
 
-# Recommender System Building:
+# Recommender System Building
+## Model building:
 **Prerequisites to do:** 
 1. 
 
@@ -48,6 +49,18 @@ c. evaluation.py
 d. decorator.py
 e. competition.py
 
+16. create preprocess rating tomorrow to keep only positive interactions as 1 and unrated items as 0. 
+17. unwatched item set of a user (all unique values) must be equal to or greater than length of positive item set of that user. This will be a constraint we must add to avoid any future errors when sampling
+18. need to find the end result of entity_id2index after convert_kg function
+19. add logs to get_length__build_value_to_index
+20. pipeline of separate_pos_neg_ratings() function:
+a. pass ratings df, item_id string
+b. return values will have var names n_items, old_item_idx2new_item_idx
+c. for users the same thing...n_users, old_user_idx2new_user_idx
+d. use built lookup dictionaries to renew user id and item id columns
+e. pass new dataframe to separate_pos_neg_ratings() func
+f. separate pos and neg ratings based on threshold by vectorization
+
 **Questions:**
 1. how do I split the data into training, validation, and testing sets?
 2. how do I batch train the model?
@@ -55,17 +68,48 @@ e. competition.py
 4. how do I implement the AUC, Precision@k, Recall@k, and F1-score in this model?
 
 **Insights:**
-1. 
+1. User will always have negative ratings so remove this by subtracting all unique items from negative rating set and positive rating set to get all items not rated by a user. When sampling with replacement, sample size can be greater than population size. And the population mean is a parameter; the sample mean is a statistic e.g. [1, 2, 3] sample 10 can be permitted if replace is true or we sample with replacement or return the value we took out in our "bag"
 
 **Conclusions**
 1. 
 
 **Articles:**
 1. building a matrix factorization model and normalizing ratings: https://www.kaggle.com/code/colinmorris/matrix-factorization
-2. 
+2. somehow convert each row that has a unique uswr and their corresponding rated item to a dictionary with each value as a set in a vectorized way: https://stackoverflow.com/questions/65436865/how-to-convert-dataframe-into-dictionary-of-sets
 
 **Side notes:**
 
+## Preprocessing data:
+**Prerequisites to do:**
+**To do:**
+**Questions:**
+**Insights:**
+**Conclusions:**
+**Articles:**
+**Side notes:**
+
+## Analyzing embeddings
+**Prerequisites to do:**
+
+**To do:**
+
+**Questions:**
+
+
+**Insights:**
+
+**Articles:**
+1. An algorithm similar to (or based on) K-means that do not require the 'k' number of clusters
+* https://stats.stackexchange.com/questions/319807/an-algorithm-similar-to-or-based-on-k-means-that-do-not-require-the-k-number
+
+2. Introduction to Embedding, Clustering, and Similarity
+* https://towardsdatascience.com/introduction-to-embedding-clustering-and-similarity-11dd80b00061
+
+3. K Means Clustering on High Dimensional Data.
+* https://medium.com/swlh/k-means-clustering-on-high-dimensional-data-d2151e1a4240
+
+4. How to transform a 3d arrays into a dataframe in python
+* https://stackoverflow.com/questions/35525028/how-to-transform-a-3d-arrays-into-a-dataframe-in-python
 
 
 
@@ -107,7 +151,7 @@ use https://tecoholic.github.io/ner-annotator/ for annotating organized text fil
 **Side notes:**
 1. 
 
-## Training Model
+## Training Model:
 **Prerequisites to do:**
 1. sample dat for named entity recognition
 
