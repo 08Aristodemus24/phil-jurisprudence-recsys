@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow import GradientTape
 from tensorflow.keras.optimizers import Adam
+import numpy as np
 
 class PhilJurisFM:
     def __init__(self, Y, R, num_features=10, epochs=300, epoch_to_rec_at=50, alpha=0.003, lambda_=0.1, regularization="L2"):

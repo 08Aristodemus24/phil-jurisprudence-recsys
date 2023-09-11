@@ -70,11 +70,11 @@ d. decorator.py
 e. competition.py
 
 **To do:**
-1. create preprocess rating tomorrow to keep only positive interactions as 1 and unrated items as 0. 
-2. unwatched item set of a user (all unique values) must be equal to or greater than length of positive item set of that user. This will be a constraint we must add to avoid any future errors when sampling
+1. <s>create preprocess rating tomorrow to keep only positive interactions as 1 and unrated items as 0.</s>
+2. <s>unwatched item set of a user (all unique values) must be equal to or greater than length of positive item set of that user. This will be a constraint we must add to avoid any future errors when sampling. Because if it is the case that unwatched items is less than positive e.g. user rated 10 items positively and 3 items negatively out of all 20 items, unwatched items would be 7, this would be an error since we aer sampling without replacement the same number of positive items which is 10 from an unrated set of only 7 items. But since this is a recommendation system where usually users do not rate most items and the user-item interaction and rating matrix is sparse, such an error could be avoided for the mean time, but we still need to find a way to handle this</s>
 3. need to find the end result of entity_id2index after convert_kg function
-4. add logs to get_length__build_value_to_index
-5. pipeline of separate_pos_neg_ratings() function:
+4. <s>add logs to get_length__build_value_to_index</s>
+5. <s>pipeline of separate_pos_neg_ratings() function:</s>
 a. pass ratings df, item_id string
 b. return values will have var names n_items, old_item_idx2new_item_idx
 c. for users the same thing...n_users, old_user_idx2new_user_idx
@@ -152,6 +152,8 @@ Name: item_id, dtype: object
 >>> temp.to_dict()
 {1: {1, 2}, 2: {9, 2}, 3: {50}, 5: {4}, 16: {9, 99, 4}, 20: {9}, 32: {100}, 56: {21}}
 ```
+**Problems:**
+1. A big problem is that upon using refactor_raw_ratings() to get only positive ratings and sample unwatched ratings, item_ids unsually doubles from 3706 items to now 6040 items. So why is that?
 
 **Questions:**
 
