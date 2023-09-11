@@ -114,8 +114,11 @@ class DFM(tf.keras.Model):
         # initialize last layer of DNN to dense with no activation
         self.last_dense_layer = tf.keras.layers.Dense(units=1, activation='linear', kernel_regularizer=self.regularization(lambda_))
 
-        # output layer will just be an add layer
-        self.output_layer = tf.keras.layers.Add()
+        
+        self.add_layer = tf.keras.layers.Add()
+
+        # output layer will just be a sigmoid activation layer
+        self.out_layer = tf.keras.layers.Activation(activation=tf.nn.sigmoid)
         
 
     def call(self, inputs, **kwargs):
@@ -161,7 +164,11 @@ class DFM(tf.keras.Model):
         A_last = self.last_dense_layer(A)
 
         # add the output to the flattened factorized matrix
-        out = self.output_layer([A_last, fact_matrix_flat])
+        sum_ = self.add_layer([A_last, fact_matrix_flat])
+
+        # pass the sum of last dense layer and the flattened 
+        # factorized matrix to a sigmoid activation function
+        out = self.out_layer(sum_)
 
         return out
 
