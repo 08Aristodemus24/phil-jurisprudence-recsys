@@ -3,7 +3,7 @@ from tensorflow.keras.losses import MeanSquaredError as mse_loss
 from tensorflow.keras.metrics import MeanSquaredError as mse_metric
 from tensorflow.keras.callbacks import EarlyStopping
 
-from models.model_arcs import FM, DFM
+from models.test_arcs_a import FM, DFM
 from utilities.data_visualizers import view_vars, train_cross_results_v2
 from utilities.data_loaders import load_ratings_small, load_raw_movie_ratings_large, load_raw_juris_ratings_large
 from utilities.data_preprocessors import normalize_ratings, get_length__build_value_to_index, build_results, split_data

@@ -223,7 +223,7 @@ def split_data(df: pd.DataFrame):
 
 
 
-def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: bool=False) -> (pd.DataFrame, pd.DataFrame):
+def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: bool=False) -> (dict, dict):
     """
     returns two dataframes one of the negative ratings and the other the 
     positive ratings made by a user
@@ -236,9 +236,18 @@ def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: b
     df = ratings.copy()
     
     bools = df['rating'] >= threshold
+    print(bools)
 
-    pos_ratings = df.iloc[bools]
-    neg_ratings = df.iloc[~bools]
+    pos_ratings = df[bools]
+    neg_ratings = df[~bools]
+    
+    temp_pos = pos_ratings.groupby('user_id')['item_id'].agg(set)
+    temp_neg = neg_ratings.groupby('user_id')['item_id'].agg(set)
+
+    final_pos_ratings = temp_pos.to_dict()
+    final_neg_ratings = temp_pos.to_dict()
+
+    return final_pos_ratings, final_neg_ratings
 
 
 

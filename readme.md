@@ -136,6 +136,23 @@ or
 >>>
 ```
 
+```
+>>> temp = ratings.groupby('user_id')['item_id'].agg(set)
+>>> temp
+user_id
+1         {1, 2}
+2         {9, 2}
+3           {50}
+5            {4}
+16    {9, 99, 4}
+20           {9}
+32         {100}
+56          {21}
+Name: item_id, dtype: object
+>>> temp.to_dict()
+{1: {1, 2}, 2: {9, 2}, 3: {50}, 5: {4}, 16: {9, 99, 4}, 20: {9}, 32: {100}, 56: {21}}
+```
+
 **Questions:**
 
 **Insights:**
