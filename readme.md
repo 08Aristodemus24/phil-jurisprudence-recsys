@@ -40,7 +40,7 @@ This is the second phase of my undergraduate thesis which will recommend jurispr
     d. prediciton 3.5 -> 3.5 - 3 = 0.5 >= 0.5 therefore round 3.5 to 4.0
 11. <s>because initial factorization machine (FM) architecture of collaborative filtering model already exists, using the the Functional API of tensorflow by using the built-in Model class, I need to build a more tailored version of this Model class that implements this FM architecture</s>
 12. <s>build DeepFM architecture</s>
-13. <s>write MKR architecture<s>
+13. <s>write MKR architecture</s>
 
 **Questions:**
 1. how do I split the data into training, validation, and testing sets?
@@ -153,7 +153,7 @@ Name: item_id, dtype: object
 {1: {1, 2}, 2: {9, 2}, 3: {50}, 5: {4}, 16: {9, 99, 4}, 20: {9}, 32: {100}, 56: {21}}
 ```
 **Problems:**
-1. A big problem is that upon using refactor_raw_ratings() to get only positive ratings and sample unwatched ratings, item_ids unsually doubles from 3706 items to now 6040 items. So why is that?
+1. <s>A big problem is that upon using refactor_raw_ratings() to get only positive ratings and sample unwatched ratings, item_ids unsually doubles from 3706 items to now 6040 items. So why is that?</s>
 
 **Questions:**
 
