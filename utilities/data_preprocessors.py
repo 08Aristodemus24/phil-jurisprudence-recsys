@@ -208,20 +208,21 @@ def _build_value_to_index(unique_ids):
 
 
 
-def split_data(df: pd.DataFrame):
+def split_data(X: pd.DataFrame, Y: pd.Series):
     """
     splits the given dataframe into training, cross-validation, and testing sets
     """
-    columns = df.columns != 'rating'
-    X_trains, X_, Y_trains, Y_ = train_test_split(df[df.columns[columns]], df['rating'], test_size=0.3, random_state=0)
+    
+    X_trains, X_, Y_trains, Y_ = train_test_split(X, Y, test_size=0.3, random_state=0)
     X_cross, X_tests, Y_cross, Y_tests = train_test_split(X_, Y_, test_size=0.3, random_state=0)
 
     # reintegrate Y outputs to X inputs because the combined
     # dataframe will be used as a whole for the normalization
     # function
-    train_data = pd.concat([X_trains, Y_trains], axis=1)
-    cross_data = pd.concat([X_cross, Y_cross], axis=1)
-    test_data = pd.concat([X_tests, Y_tests], axis=1)
+    train_data = pd.concat([X_trains, Y_trains], axis=1).reset_index(drop=True)
+    cross_data = pd.concat([X_cross, Y_cross], axis=1).reset_index(drop=True)
+    test_data = pd.concat([X_tests, Y_tests], axis=1).reset_index(drop=True)
+
     return train_data, cross_data, test_data
 
 
@@ -240,7 +241,7 @@ def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: b
     df = ratings.copy()
     
     bools = df['rating'] >= threshold
-    print(bools)
+    # print(bools)
 
     pos_ratings = df[bools]
     neg_ratings = df[~bools]
@@ -254,16 +255,17 @@ def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: b
     return final_pos_ratings, final_neg_ratings
 
 
-def refactor_raw_ratings(pos_user_ratings: dict, neg_user_ratings: dict, item_to_index):
+
+def refactor_raw_ratings(pos_user_ratings: dict, neg_user_ratings: dict, item_to_index: dict, show_logs=True):
     # bug may be in item_to_index
     def helper(pos_user_rating):
         users_id = []
         users_new_item_set = []
         users_interaction = []
 
+        # extract current user_id, and the corresponding item set
+        # they've positively rated, in the concurrent process
         user_id, pos_item_set = pos_user_rating
-        print(user_id)
-        print(pos_item_set)
 
         item_set = set(item_to_index.values())
 
@@ -287,7 +289,7 @@ def refactor_raw_ratings(pos_user_ratings: dict, neg_user_ratings: dict, item_to
         # of positive item set of that user. This will be a constraint we 
         # must add to avoid any future errors when sampling. 
         num_items_to_sample = len(pos_item_set) if len(unrated_item_set) >= len(pos_item_set) else len(unrated_item_set)
-        print(len(pos_item_set), len(unrated_item_set))
+        
         # for every positive interaction we sample the same 
         # amount from the unrated item set and use these
         # as our not interacted samples
@@ -295,6 +297,11 @@ def refactor_raw_ratings(pos_user_ratings: dict, neg_user_ratings: dict, item_to
             users_id.append(user_id)
             users_new_item_set.append(unrated_item)
             users_interaction.append(0)
+
+        if show_logs is True:
+            print(user_id)
+            print(pos_item_set)
+            print(len(pos_item_set), len(unrated_item_set))
         
         return pd.DataFrame({'user_id': users_id, 'item_id': users_new_item_set, 'interaction': users_interaction})
 
@@ -304,86 +311,6 @@ def refactor_raw_ratings(pos_user_ratings: dict, neg_user_ratings: dict, item_to
         final_result = comb_results.sample(frac=1).reset_index(drop=True, inplace=False)
 
     return final_result
-
-    # """
-    # WE LOOP THROUGH ALL KEY-VALUE PAIRS OF THE NEWLY POPULATED AND THE REORGANIZED
-    # RATINGS DATASET WHICH IS THE USER_POST_RATINGS DICTIONARY
-    # """
-    # for user_index_old, pos_item_set in user_pos_ratings.items():
-    #     """
-    #     HERE WE CHECK IF THE 
-    #     """
-    #     if user_index_old not in user_index_old2new:
-    #         user_index_old2new[user_index_old] = user_cnt
-    #         user_cnt += 1
-    #     user_index = user_index_old2new[user_index_old]
-
-    #     for item in pos_item_set:
-    #         rated_unrated_items['user_id'].append(user_index)
-    #         rated_unrated_items['item_id'].append(item)
-    #         rated_unrated_items['response'].append(1)
-    #         writer.write('%d\t%d\t1\n' % (user_index, item))
-
-    #     """
-    #     HERE WE WILL FINALLY USE THE ITEM_SET SET DECLARED EARLIER IN
-    #     THE FUNCTION WHICH RECALL CONTAINS ALL THE UNIQUE VALUES OF THE
-    #     ITEM_INDEX_OLD2NEW DICTIONARY VALUES
-
-    #     UNWATCHED_SET HERE JUST CONTAINS THE COMPLEMENT OF THE ITEMS
-    #     INTERACTED POSITIVELY WITH BY A USER TO ALL THE UNIQUE VALUES
-    #     OF THE ITEM_SET (WHICH IS ALSO IN THE KG)
-
-    #     E.G. POS_ITEM_SET OF USER 1 IS [0, 5, 4, 6] AND ITEM_SET IS 
-    #     [0, 1, 2, 3, 4, 5, 6, 7] THEREFORE 
-    #     [0, 1, 2, 3, 4, 5, 6, 7] - [0, 5, 4, 6] IS {1, 2, 3, 7}
-    #     """
-    #     unwatched_set = item_set - pos_item_set
-
-    #     """
-    #     AND HERE WE CHECK IF THE USER_INDEX_OLD ID VALUE IN THE POSITIVE 
-    #     RATING SET DICTIONARY ALSO EXISTS IN THE USER_NEG_RATINGS DICTIONARY
-    #     BECAUSE IF IT IS
-
-    #     BECAUSE THIS TELLS US THAT A USER THOUGH IT HAS POSITIVE INTERACTED
-    #     ITEMS CAN ALSO HAVE ITEMS THAT IT HAS NEGATIVELY INTERACTED WITH 
-    #     REPRESENTED THROUGH THE UESR_NEG_RATINGS DICTIONARY
-    #     """
-    #     if user_index_old in user_neg_ratings:
-    #         """
-    #         TAKE THE UNWATCHED_SET OF A USER SAY THE ABOVE WHICH IS {1, 2, 3, 7}
-    #         THEN ACCESS THE USER_NEG_RATINGS OF USER_INDEX_OLD (WHICH IS BASICALLY
-    #         AGAIN THE UNIQUE ID OF THE USER) AND FURTHER TRY TO REDUCE THE UNWATCHED
-    #         OR THE UNRATED OR UNINTERACTED ITEMS OF A USER USING THE ITEM SET THEY
-    #         NEGATIVELY RATED.
-
-    #         ALTERNATIVELY user_neg_ratings[user_index_old] COULD BE SEE AS neg_item_set
-    #         CONTRARY TO THE ABOVE WHICH IS THE pos_item_set set.
-
-    #         SO FOR INSTNCE IF OUR NEG_ITEM_SET IS [1, 7, 10, 12] THEN OUR UNWATCHED_SET
-    #         [1, 2, 3, 7] - NEG_ITEM_SET [1, 7, 10, 12] WOULD RESULT IN {2, 3}
-    #         """
-    #         unwatched_set = unwatched_set - user_neg_ratings[user_index_old]
-
-    #     """
-    #     MY QUESTION HERE IS IF LENGTH OF UNWATCHED SET IS LESS THAN POS_ITEM_SET E.G.
-    #     {2, 3} FOR TEH UNWATCHED_SET AND {0, 5, 4, 6} FOR THE POSITIVELY INTERACTED WITH
-    #     ITEMS BY USERS THEN SHOULD WE SAMPLE 4 ITEMS FROM {2, 3} WITHOUT REPLACEMENT THEN
-    #     THIS WOULD RESULT IN AN ERROR E.G.
-
-    #     numpy.random.choice(list([2, 3]), size=4, replace=False)
-    #     Traceback (most recent call last):
-    #     File "<stdin>", line 1, in <module>
-    #     File "mtrand.pyx", line 965, in numpy.random.mtrand.RandomState.choice
-    #     ValueError: Cannot take a larger sample than population when 'replace=False'
-
-    #     OR IS IT ALWAYS GUARANTEED THAT THE UNWATCHED_SET HAVE GREATER ELEMENTS THAN THE
-    #     POS_ITEM_SET?
-    #     """
-    #     for item in np.random.choice(list(unwatched_set), size=len(pos_item_set), replace=False):
-    #         rated_unrated_items['user_id'].append(user_index)
-    #         rated_unrated_items['item_id'].append(item)
-    #         rated_unrated_items['response'].append(0)
-    #         writer.write('%d\t%d\t0\n' % (user_index, item))
 
 
 

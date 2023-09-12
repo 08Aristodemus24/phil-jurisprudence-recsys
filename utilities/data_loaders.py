@@ -31,18 +31,18 @@ def load_Movie_List_pd(dir_path):
     mlist = df["title"].to_list()
     return (mlist, df)
     
-def load_raw_movie_ratings_large(dir_path):
+def load_raw_movie_1m_ratings(dir_path):
     """
     returns df with columns of users, the items they interacted with, 
     their rating of that item, and the timestamp in which they did so
     """
 
-    df = pd.read_csv(f'{dir_path}/ratings.dat', delimiter='::', header=None)
+    df = pd.read_csv(f'{dir_path}/ml_1m_ratings.dat', delimiter='::', header=None)
     df.rename(columns={0: 'user_id', 1: 'item_id', 2: 'rating', 3: 'timestamp'}, inplace=True)
 
     return df
 
-def load_raw_kg_20k(dir_path):
+def load_raw_movie_20k_kg(dir_path):
     """
     returns the knowledge graph as a dataframe of 3 columns representing
     each triple in the knowledge graph
@@ -53,19 +53,30 @@ def load_raw_kg_20k(dir_path):
 
     return kg
     
-def load_raw_juris_ratings_large(dir_path):
+def load_raw_juris_300k_ratings(dir_path: str):
     """
     returns a the .csv file of the synthesized jurisprudence document data
     set. Contains the columns of users, the items they "interacted with",
     and the synthetic rating created for that user-item interaction
     """
 
-    df = pd.read_csv(f'{dir_path}/synthesized_juris_ratings.csv', index_col=0)
+    df = pd.read_csv(f'{dir_path}/juris_300k_ratings.csv', index_col=0)
+    
+    return df
+
+def load_raw_juris_600k_ratings(dir_path: str):
+    """
+    returns a the .csv file of the synthesized jurisprudence document data
+    set. Contains the columns of users, the items they "interacted with",
+    and the synthetic rating created for that user-item interaction
+    """
+
+    df = pd.read_csv(f'{dir_path}/juris_600k_ratings.csv', index_col=0)
     
     return df
 
 
-def load_item_index2entity_id_file(dir_path):
+def load_item_index2entity_id_file(dir_path: str):
     """
     returns the dataframe of the mappings of item_id's in the raw rating file
     to the head entities in the knowledge graph
@@ -75,4 +86,18 @@ def load_item_index2entity_id_file(dir_path):
     item_index2entity_id.rename(columns={0: 'item_index', 1: 'entity_id'}, inplace=True)
 
     return item_index2entity_id
+
+def load_data_splits(dataset: str, dir_path: str):
+    """
+    since all choices of data to use will be preprocessed first
+    and then have an output .csv file this function will returns
+    the split final preprocessed data
+    """
+
+    out_file = dataset.replace('-', '_') + '_ratings'
+    train_data = pd.read_csv(f'{dir_path}/{out_file}_final_train.csv')
+    cross_data = pd.read_csv(f'{dir_path}/{out_file}_final_cross.csv')
+    test_data = pd.read_csv(f'{dir_path}/{out_file}_final_test.csv')
+
+    return train_data, cross_data, test_data
 
