@@ -1,28 +1,175 @@
 from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.losses import MeanSquaredError as mse_loss
-from tensorflow.keras.metrics import MeanSquaredError as mse_metric
+from tensorflow.keras.losses import (BinaryCrossentropy as bce_loss, 
+    MeanSquaredError as mse_loss
+)
+
+from tensorflow.keras.metrics import (BinaryAccuracy, 
+    Precision,
+    Recall,
+    F1Score,
+    AUC,
+    BinaryCrossentropy as bce_metric, 
+    MeanSquaredError as mse_metric
+
+)
 from tensorflow.keras.callbacks import EarlyStopping
 
 from models.model_arcs import FM, DFM, MKR
 from utilities.data_visualizers import view_vars, train_cross_results_v2
-from utilities.data_loaders import load_data_splits
-from utilities.data_preprocessors import get_length__build_value_to_index, build_results
+
+# the functions from the preprocess.py file which we need to use in order to get hte
+# intermediate values before ratings_final.txt and kg_final.txt are outputted
+from utilities.data_preprocessors import (get_length__build_value_to_index, 
+    separate_pos_neg_ratings,
+    refactor_raw_ratings,
+    split_data,
+    normalize_ratings,
+    build_results,
+    read_item_index_to_entity_id_file, 
+    convert_rating, 
+    convert_kg
+)
+
+from utilities.data_loaders import (load_raw_juris_300k_ratings,
+    load_raw_juris_600k_ratings,
+    load_raw_movie_1m_ratings, 
+    load_raw_movie_20k_kg, 
+    load_item_index2entity_id_file)
+
 from argparse import ArgumentParser, ArgumentTypeError, ArgumentError
 
 
+def main_preprocess(dataset: str, protocol: str):
+    """
+    preprocesses the data and then returns the training, validation, 
+    and testing splits, and returns the unique number of users and items
+    in the dataset
+    """
+    print('Commencing preprocessing...')
 
-if __name__ == "__main__":
     # dataset to choose from
-    dataset = {
-        'juris-300k': load_data_splits('juris-300k', './data/juris-300k'),
-        'juris-600k': load_data_splits('juris-600k', './data/juris-600k'),
-        'ml-1m': load_data_splits('ml-1m', './data/ml-1m')
+    datasets = {
+        'juris-300k': load_raw_juris_300k_ratings('./data/juris-300k'),
+        'juris-600k': load_raw_juris_600k_ratings('./data/juris-600k'),
+        'ml-1m': load_raw_movie_1m_ratings('./data/ml-1m')
     }
 
+    data = datasets[dataset]
+
+    # we must know number of total users and items first before splitting dataset
+    # in hate speech classifier we built the word to index dictionary first and
+    # configures the embedding matrix to have this dicitonary's number of unique words
+    # the embedding look up will have a set number of users & items taking into account 
+    # the unique users and items in the training, validation, and testing splits
+    n_users, user_to_index = get_length__build_value_to_index(data, 'user_id', show_logs=False)
+    n_items, item_to_index = get_length__build_value_to_index(data, 'item_id', show_logs=False)
+
+    # convert old id's to new id's
+    data['user_id'] = data['user_id'].apply(lambda user_id: user_to_index[user_id])
+    data['item_id'] = data['item_id'].apply(lambda item_id: item_to_index[item_id])
+
+    if protocol == "A":
+        # separate positive and negative ratings
+        pos_user_ratings, neg_user_ratings = separate_pos_neg_ratings(data)
+
+        # finally sample unrated items as our negative class
+        refactored_data = refactor_raw_ratings(
+            pos_user_ratings=pos_user_ratings, 
+            neg_user_ratings=neg_user_ratings, 
+            item_to_index=item_to_index, 
+            show_logs=False)
+
+        # split data into training, validation, and testing
+        train_data, cross_data, test_data = split_data(refactored_data[['user_id', 'item_id']], refactored_data['interaction'])
+        print('Preprocessing finished!')
+
+        # return data splits
+        return n_users, n_items, train_data, cross_data, test_data
+    
+    elif protocol == "B":
+        # split data into training, validation, and testing
+        # here it is imperative that we split first before normalization
+        # to prevent data leakage across the validation and testing sets
+        train_data, cross_data, test_data = split_data(data[['user_id', 'item_id']], data['rating'])
+
+        # normalize ratings of each user to an item
+        train_data = normalize_ratings(train_data)
+        cross_data = normalize_ratings(cross_data)
+        test_data = normalize_ratings(test_data)
+        print('Preprocessing finished!')
+
+        # return data splits
+        return n_users, n_items, train_data, cross_data, test_data
+
+    elif protocol == "C":
+        # will follow convert rating with knowledge graph into ratings_final.txt or ratings_final.csv
+        # convert the knowledge graph and write a kg_final.txt file or kg_final.csv
+
+        # for now this is 
+        pass
+
+
+def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_features: int, epoch_to_rec_at: int, rec_alpha: float, rec_lambda: float, rec_keep_prob: float, regularization: str):
+    """
+    creates, compiles and returns chosen model to train
+
+    args: 
+        model_name - 
+        protocol - 
+        n_users - 
+        n_items - 
+        n_features - 
+        epoch_to_rec_at - 
+        rec_alpha - 
+        rec_lambda - 
+        rec_keep_prob - 
+        regularization - 
+    """
+    
+    protocols = {
+        'A': {
+            'loss': bce_loss(),
+            'metrics': [bce_metric(), BinaryAccuracy(), Precision(), Recall(), F1Score(), AUC()]
+        },
+        'B': {
+            'loss': mse_loss(),
+            'metrics': [mse_metric()]
+        }
+    }
+
+    models = {
+        'FM': FM(
+            n_users=n_users, 
+            n_items=n_items,
+            emb_dim=n_features,
+            lambda_=rec_lambda,
+            regularization=regularization),
+        'DFM': DFM(
+            n_users=n_users, 
+            n_items=n_items, 
+            emb_dim=n_features, 
+            lambda_=rec_lambda, 
+            keep_prob=rec_keep_prob, 
+            regularization=regularization)
+    }
+
+    model = models[model_name]
+
+    model.compile(
+        optimizer=Adam(learning_rate=rec_alpha),
+        loss=protocols[protocol]['loss'],
+        metrics=protocols[protocol]['metrics']
+    )
+       
+    return model
+    
+
+if __name__ == "__main__":
     # instantiate parser to take args from user in command line
     parser = ArgumentParser()
     parser.add_argument('-d', type=str, default="juris-300k", help='dataset to use which can be juris-300k for the juris docs rating dataset or ml-1m for the movie lens rating dataset')
-    parser.add_argument('--model', type=str, default="FM", help="which specific model to train")
+    parser.add_argument('--protocol', type=str, default="A", help="the protocol or procedure to follow to preprocess the dataset which consists of either preprocessing for binary classification or for regression")
+    parser.add_argument('--model_name', type=str, default="FM", help="which specific model to train")
     parser.add_argument('--n_features', type=int, default=10, help='number of features of decomposed matrices X, THETA, B_u, and B_i of Y')
     parser.add_argument('--n_epochs', type=int, default=300, help='the number of epochs')
     parser.add_argument('--epoch_to_rec_at', type=int, default=50, help='every epoch to record at')
@@ -33,19 +180,37 @@ if __name__ == "__main__":
     parser.add_argument('--batch_size', type=int, default=4096, help='batch size')
     # parser.add_argument('--lr_kge', type=float, default=0.01, help='learning rate of KGE task')
     # parser.add_argument('--kge_interval', type=int, default=3, help='training interval of KGE task')
-
     args = parser.parse_args()
 
-    # # load user-item rating and interactions matrices
-    # Y, R = load_ratings_small('./data/ratings')
-    # n_users, n_items = Y.shape[1], Y.shape[0]
-    # view_vars(Y, R, X, THETA, BETA)
+    # load user-item rating dataset
+    n_users, n_items, train_data, cross_data, test_data = main_preprocess(args.d, args.protocol)
 
-    # model = PhilJurisFM(Y, R, 
-    #     num_features=args.n_features, 
-    #     epochs=args.n_epochs, 
-    #     epoch_to_rec_at=args.epoch_to_rec_at, 
-    #     alpha=args.rec_alpha, 
-    #     lambda_=args.rec_lambda, 
-    #     regularization=args.regularization)
-    # history = model.train()
+    # load model
+    model = load_model(
+        model_name=args.model, 
+        protocol=args.protocol,
+        n_features=args.n_features,
+        epoch_to_rec_at=args.epoch_to_rec_at,
+        rec_alpha=args.rec_alpha,
+        rec_lambda=args.rec_lambda,
+        rec_keep_prob=args.rec_keep_prob,
+        regularization=args.regularization
+    )
+
+    # train model
+    history = model.fit(
+        [train_data['user_id'], train_data['item_id']],
+        train_data['interaction'],
+        batch_size=args.batch_size,
+        epochs=args.n_epochs,
+        validation_data=([cross_data['user_id'], cross_data['item_id']], cross_data['interaction']),
+        # callbacks=[EarlyStopping(monitor='val_loss', patience=3)]
+    )
+
+    # visualize model results
+    train_cross_results_v2(
+        results=build_results(history, metrics=['loss', 'val_loss', 'binary_cross_entropy', 'val_binary_crossentropy', 'binary_accuracy', 'val_binary_accuracy']), 
+        epochs=history.epoch, 
+        img_title='binary FM (factorization machine) performance')
+    # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
+    # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='DFM (deep factorization machine) performance')
