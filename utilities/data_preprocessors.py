@@ -166,6 +166,7 @@ def _is_strictly_inc_by_k(unique_ids: list | pd.Series, k: int):
 
     # keys would be a list of strings ints so convert to 
     converted = list(map(int, unique_ids))
+    print(len(converted))
     # print(converted[:15])
     
     # true values are if difference are exactly equal to k e.g.
@@ -180,11 +181,12 @@ def _is_strictly_inc_by_k(unique_ids: list | pd.Series, k: int):
     # negation values and when all added after negation is exactly zero
     # meaning false, thus array elements increments strictly by k
     negated_bools = ~(np.diff(converted) == k)
+    index = np.where(negated_bools == True)
 
     # returns true if the sum is greater than or less than 0
     # because any value < 0 or > 0 is a non-zero value, and a zero
     # value is simply a false value
-    return not bool(negated_bools.astype(np.int64).sum())
+    return not bool(negated_bools.astype(np.int64).sum()), index
 
 
 
