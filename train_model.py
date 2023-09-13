@@ -1,3 +1,4 @@
+from keras import backend as K
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import (BinaryCrossentropy as bce_loss, 
     MeanSquaredError as mse_loss
@@ -6,12 +7,11 @@ from tensorflow.keras.losses import (BinaryCrossentropy as bce_loss,
 from tensorflow.keras.metrics import (BinaryAccuracy, 
     Precision,
     Recall,
-    F1Score,
     AUC,
     BinaryCrossentropy as bce_metric, 
     MeanSquaredError as mse_metric
-
 )
+
 from tensorflow.keras.callbacks import EarlyStopping
 
 from models.model_arcs import FM, DFM, MKR
@@ -129,7 +129,7 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
     protocols = {
         'A': {
             'loss': bce_loss(),
-            'metrics': [bce_metric(), BinaryAccuracy(), Precision(), Recall(), F1Score(), AUC()]
+            'metrics': [bce_metric(), BinaryAccuracy(), Precision(), Recall(), AUC(), f1_m]
         },
         'B': {
             'loss': mse_loss(),
@@ -162,7 +162,23 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
     )
        
     return model
-    
+
+def recall_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
+    recall = true_positives / (possible_positives + K.epsilon())
+    return recall
+
+def precision_m(y_true, y_pred):
+    true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
+    predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
+    precision = true_positives / (predicted_positives + K.epsilon())
+    return precision
+
+def f1_m(y_true, y_pred):
+    precision = precision_m(y_true, y_pred)
+    recall = recall_m(y_true, y_pred)
+    return 2*((precision*recall)/(precision+recall+K.epsilon()))
 
 if __name__ == "__main__":
     # instantiate parser to take args from user in command line
@@ -187,8 +203,10 @@ if __name__ == "__main__":
 
     # load model
     model = load_model(
-        model_name=args.model, 
+        model_name=args.model_name, 
         protocol=args.protocol,
+        n_users=n_users,
+        n_items=n_items,
         n_features=args.n_features,
         epoch_to_rec_at=args.epoch_to_rec_at,
         rec_alpha=args.rec_alpha,
@@ -209,7 +227,7 @@ if __name__ == "__main__":
 
     # visualize model results
     train_cross_results_v2(
-        results=build_results(history, metrics=['loss', 'val_loss', 'binary_cross_entropy', 'val_binary_crossentropy', 'binary_accuracy', 'val_binary_accuracy']), 
+        results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
         epochs=history.epoch, 
         img_title='binary FM (factorization machine) performance')
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
