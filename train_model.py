@@ -14,6 +14,7 @@ from tensorflow.keras.metrics import (BinaryAccuracy,
 
 from tensorflow.keras.callbacks import EarlyStopping
 
+# from models.test_arcs_a import FM, DFM, MKR
 from models.model_arcs import FM, DFM, MKR
 from utilities.data_visualizers import view_vars, train_cross_results_v2
 
@@ -39,13 +40,13 @@ from utilities.data_loaders import (load_raw_juris_300k_ratings,
 from argparse import ArgumentParser, ArgumentTypeError, ArgumentError
 
 
-def main_preprocess(dataset: str, protocol: str):
+def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
     """
     preprocesses the data and then returns the training, validation, 
     and testing splits, and returns the unique number of users and items
     in the dataset
     """
-    print('Commencing preprocessing...')
+    print(f'Commencing preprocessing of {dataset}...')
 
     # dataset to choose from
     datasets = {
@@ -81,10 +82,19 @@ def main_preprocess(dataset: str, protocol: str):
 
         # split data into training, validation, and testing
         train_data, cross_data, test_data = split_data(refactored_data[['user_id', 'item_id']], refactored_data['interaction'])
+
+        if show_logs is True:
+            print(f"unique interactions: {refactored_data['interaction'].value_counts()}")
+            print(f"unique user_id's{refactored_data['user_id'].value_counts()}")
+            print(f"unique item_id's{refactored_data['item_id'].value_counts()}")
+            print(f'train_data shape: {train_data.shape}')
+            print(f'cross_data shape: {cross_data.shape}')
+            print(f'test_data shape: {test_data.shape}')
         print('Preprocessing finished!')
 
         # return data splits
         return n_users, n_items, train_data, cross_data, test_data
+        # return refactored_data['user_id'].value_counts().size, refactored_data['item_id'].value_counts().size, train_data, cross_data, test_data
     
     elif protocol == "B":
         # split data into training, validation, and testing
@@ -107,7 +117,6 @@ def main_preprocess(dataset: str, protocol: str):
 
         # for now this is 
         pass
-
 
 def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_features: int, epoch_to_rec_at: int, rec_alpha: float, rec_lambda: float, rec_keep_prob: float, regularization: str):
     """
@@ -178,7 +187,9 @@ def precision_m(y_true, y_pred):
 def f1_m(y_true, y_pred):
     precision = precision_m(y_true, y_pred)
     recall = recall_m(y_true, y_pred)
-    return 2*((precision*recall)/(precision+recall+K.epsilon()))
+    return 2 * ((precision * recall) / (precision + recall + K.epsilon()))
+
+
 
 if __name__ == "__main__":
     # instantiate parser to take args from user in command line
@@ -197,9 +208,10 @@ if __name__ == "__main__":
     # parser.add_argument('--lr_kge', type=float, default=0.01, help='learning rate of KGE task')
     # parser.add_argument('--kge_interval', type=int, default=3, help='training interval of KGE task')
     args = parser.parse_args()
+    # print(args)
 
     # load user-item rating dataset
-    n_users, n_items, train_data, cross_data, test_data = main_preprocess(args.d, args.protocol)
+    n_users, n_items, train_data, cross_data, test_data = main_preprocess(args.d, args.protocol, show_logs=False)
 
     # load model
     model = load_model(
@@ -225,10 +237,16 @@ if __name__ == "__main__":
         # callbacks=[EarlyStopping(monitor='val_loss', patience=3)]
     )
 
-    # visualize model results
-    train_cross_results_v2(
-        results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
-        epochs=history.epoch, 
-        img_title='binary FM (factorization machine) performance')
+    # # visualize model results
+    # train_cross_results_v2(
+    #     results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
+    #     epochs=history.epoch, 
+    #     img_title='binary FM (factorization machine) performance')
+    
+    # train_cross_results_v2(
+    #     results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
+    #     epochs=history.epoch, 
+    #     img_title='binary DFM (deep factorization machine) performance')
+
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='DFM (deep factorization machine) performance')

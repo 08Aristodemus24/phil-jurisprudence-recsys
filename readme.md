@@ -154,6 +154,11 @@ Name: item_id, dtype: object
 ```
 **Problems:**
 1. <s>A big problem is that upon using refactor_raw_ratings() to get only positive ratings and sample unwatched ratings, item_ids unsually doubles from 3706 items to now 6040 items. So why is that?</s>
+2. There is something wrong with split data or refactor raw ratings because there seems to be a mismatch in original number of user id's and item_id's. I suspect because user id and item ids are lessened because negative ratings are removed. Nevertheless following models and used dataset produce the ff. results:
+* FM with juris_300k is ok 
+* DFM with juris_300k causes `Allocation of 268435456 exceeds 10% of free system memory.` & `OP_REQUIRES failed at segment_reduction_ops_impl.h:478 : INVALID_ARGUMENT: data.shape = [8192] does not start with segment_ids.shape = [67108864]`. I suspect this has something to do with batch size and the model architecture itself
+* FM with juris_600k is not ok to begin with (even if it runs fine albeit with abysmal AUC, F1-Score, and Binary Accuracy results) since there is one user that is missing in the final refactored juris_600k dataset, where instead of 12034 users all in all there are now only 12033 users
+* DFM with juris_600k causes `Allocation of 268435456 exceeds 10% of free system memory.` & `OP_REQUIRES failed at segment_reduction_ops_impl.h:478 : INVALID_ARGUMENT: data.shape = [8192] does not start with segment_ids.shape = [67108864]`. Again I suspect this has something to do with batch size and the model architecture itself
 
 **Questions:**
 
@@ -165,6 +170,22 @@ Name: item_id, dtype: object
 1. somehow convert each row that has a unique user and their corresponding rated item to a dictionary with each value as a set in a vectorized way: https://stackoverflow.com/questions/65436865/how-to-convert-dataframe-into-dictionary-of-sets
 
 **Side notes:**
+
+## Tuning Model
+**Prerequisites to do:**
+1. 
+**To do:**
+1. try python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.000075 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192
+2. python train_model.py -d juris-600k --protocol A --model_name FM --n_epochs 100 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192
+
+
+**Questions:**
+
+**Insights:**
+1. the higher the auc the more accurate the model is in classifying the 0 class as a 0 class and the 1 class as a 1 class for instance in a binary classification task. The more it is closer to one the more accurate it is the more it is closer to 0 the more it is inaccurate, if it is closer to 0.5 it means the model has no class separation capacity whatsoever
+
+**Articles:**
+
 
 ## Analyzing embeddings
 **Prerequisites to do:**

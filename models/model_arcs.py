@@ -127,7 +127,7 @@ class DFM(tf.keras.Model):
         # since one example would be one user and one item
         user_id_input = inputs[0]
         item_id_input = inputs[1]
-        # print(inputs)
+        print(inputs)
 
         # DEFINE FORWARD PROPAGATION
 
@@ -203,22 +203,22 @@ class MKR(tf.keras.Model):
 
         
 
-# acts also as a script for testing
-if __name__ == "__main__":
-    user_ids = tf.random.uniform(shape=(10, 1), minval=1, maxval=5, dtype=tf.int32)
-    item_ids = tf.random.uniform(shape=(10, 1), minval=1, maxval=10, dtype=tf.int32)
-    ratings = tf.random.uniform(shape=(10, 1), minval=0.5, maxval=5, dtype=tf.float32)
+# # acts also as a script for testing
+# if __name__ == "__main__":
+#     user_ids = tf.random.uniform(shape=(10, 1), minval=1, maxval=5, dtype=tf.int32)
+#     item_ids = tf.random.uniform(shape=(10, 1), minval=1, maxval=10, dtype=tf.int32)
+#     ratings = tf.random.uniform(shape=(10, 1), minval=0.5, maxval=5, dtype=tf.float32)
 
-    # 5 sample unique users and 10 sample unique items
-    model = DFM(5, 10)
-    model.compile(
-        optimizer=Adam(learning_rate=0.001),
-        loss=mse_loss(),
-        metrics=[mse_metric()]
-    )
+#     # 5 sample unique users and 10 sample unique items
+#     model = DFM(5, 10)
+#     model.compile(
+#         optimizer=Adam(learning_rate=0.001),
+#         loss=mse_loss(),
+#         metrics=[mse_metric()]
+#     )
 
-    history = model.fit(
-        [user_ids, item_ids],
-        ratings,
-        epochs=1,
-    )
+#     history = model.fit(
+#         [user_ids, item_ids],
+#         ratings,
+#         epochs=1,
+#     )
