@@ -41,18 +41,6 @@ if __name__ == "__main__":
     # n_users, n_items = Y.shape[1], Y.shape[0]
     # view_vars(Y, R, X, THETA, BETA)
 
-    # load user-item rating dataset
-    train_data, cross_data, test_data = dataset[args.d]
-    # print(data)
-
-    # we must know number of total users and items first before splitting dataset
-    # in hate speech classifier we built the word to index dictionary first and
-    # configures the embedding matrix to have this dicitonary's number of unique words
-    # the embedding look up will have a set number of users & items taking into account 
-    # the unique users and items in the training, validation, and testing splits
-    # n_users, user_to_index = get_length__build_value_to_index(data, 'user_id')
-    # n_items, item_to_index = get_length__build_value_to_index(data, 'item_id')
-
     # model = PhilJurisFM(Y, R, 
     #     num_features=args.n_features, 
     #     epochs=args.n_epochs, 
@@ -61,41 +49,3 @@ if __name__ == "__main__":
     #     lambda_=args.rec_lambda, 
     #     regularization=args.regularization)
     # history = model.train()
-
-
-    if args.model == "FM":
-        model = FM(
-            n_users=n_users, 
-            n_items=n_items,
-            emb_dim=args.n_features,
-            lambda_=args.rec_lambda,
-            regularization=args.regularization)
-    
-    elif args.model == "DFM":
-        model = DFM(
-            n_users=n_users, 
-            n_items=n_items, 
-            emb_dim=args.n_features, 
-            lambda_=args.rec_lambda, 
-            keep_prob=args.rec_keep_prob, 
-            regularization=args.regularization)
-
-    model.compile(
-        optimizer=Adam(learning_rate=args.rec_alpha),
-        loss=mse_loss(),
-        metrics=[mse_metric()]
-    )
-
-    history = model.fit(
-        [train_data['user_id'], train_data['item_id']],
-        train_data['interaction'],
-        batch_size=args.batch_size,
-        epochs=args.n_epochs,
-        validation_data=([cross_data['user_id'], cross_data['item_id']], cross_data['interaction']),
-        callbacks=[EarlyStopping(monitor='val_loss', patience=3)]
-    )
-
-    train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
-    # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='DFM (deep factorization machine) performance')
-    
-
