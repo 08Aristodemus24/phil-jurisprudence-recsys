@@ -92,7 +92,7 @@ def normalize_rating_matrix(Y, R):
 
 
 
-def get_length__build_value_to_index(ratings: pd.DataFrame, column: str, show_logs=True):
+def build_value_to_index(ratings: pd.DataFrame, column: str, start: int=0, show_logs=True):
     """
     gets all unique values given a specified column of a dataframe, 
     length of all the unique values in this column, and a dictionary
@@ -109,23 +109,29 @@ def get_length__build_value_to_index(ratings: pd.DataFrame, column: str, show_lo
     unique_ids = ratings[column].unique()
     unique_ids.sort()
 
-    # get number of all unique users/user id's
-    n_users = unique_ids.shape[0]
-
     # build dictionary to map unique id's to new indeces
-    vals_to_index = _build_value_to_index(unique_ids)
+    vals_to_index = _build_value_to_index(unique_ids, start)
     sampled = _sample_first_n(vals_to_index, 15)
 
     if show_logs is True:
         print(f"unique {column}'s: {unique_ids[:15]}")
         print(f"do unique {column}'s have missing {column}'s? {_is_strictly_inc_by_k(unique_ids, 1)}")
-        print(f"number of unique {column}: {n_users}")
         print(f"sampled dictionary of all unique {column} mapped to their respective indeces from 0 to |n_{'u' if column == 'user_id' else 'i'} - 1| {sampled}")
-    
 
-    return n_users, vals_to_index
+    return vals_to_index
 
+def get_unique_values(ratings: pd.DataFrame, column: str, show_logs=True):
+    # get user_id unique values and sort them
+    unique_ids = ratings[column].unique()
+    unique_ids.sort()
 
+    # get number of all unique users/user id's
+    n_ids = unique_ids.shape[0]
+
+    if show_logs is True:
+        print(f"number of unique {column}: {n_ids}")
+
+    return n_ids
 
 def _sample_first_n(sample_dict: dict, first_n: int=15):
     """
@@ -190,7 +196,7 @@ def _is_strictly_inc_by_k(unique_ids: list | pd.Series, k: int):
 
 
 
-def _build_value_to_index(unique_ids):
+def _build_value_to_index(unique_ids, start):
     """
     returns a dictionary mapping each unique user id to 
     sicne there may be users where there are e.g. user 1 maps to 0
@@ -206,7 +212,22 @@ def _build_value_to_index(unique_ids):
         unique_user_ids - an array/vector/set of all unique user id's from
         perhaps a ratings dataset
     """
-    return {id: index for index, id in enumerate(unique_ids)}
+    return {id: index + start for index, id in enumerate(unique_ids)}
+
+
+
+def column_to_val_to_index(ratings: pd.DataFrame, column: str):
+    """
+    converts a dataframes column to a dictionary with its values as keys
+    and the values of the new dictionary also filled with the same values
+    """
+    
+    ids = ratings[column].unique()
+    ids.sort()
+    vals_to_index = dict(zip(ids, ids))
+
+    return vals_to_index
+    
 
 
 
@@ -229,7 +250,7 @@ def split_data(X: pd.DataFrame, Y: pd.Series):
 
 
 
-def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: bool=False) -> (dict, dict):
+def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: bool=False, show_logs=True) -> (dict, dict):
     """
     returns two dictionaries one of them being the negative ratings
     made by each user and the other the positive ratings made by 
@@ -253,6 +274,10 @@ def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: b
 
     final_pos_ratings = temp_pos.to_dict()
     final_neg_ratings = temp_neg.to_dict()
+
+    if show_logs is True:
+        print(pos_ratings['user_id'].value_counts())
+        print(neg_ratings['user_id'].value_counts())
 
     return final_pos_ratings, final_neg_ratings
 

@@ -127,7 +127,6 @@ class DFM(tf.keras.Model):
         # since one example would be one user and one item
         user_id_input = inputs[0]
         item_id_input = inputs[1]
-        print(inputs)
 
         # DEFINE FORWARD PROPAGATION
 

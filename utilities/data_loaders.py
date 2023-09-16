@@ -37,7 +37,7 @@ def load_raw_movie_1m_ratings(dir_path):
     their rating of that item, and the timestamp in which they did so
     """
 
-    df = pd.read_csv(f'{dir_path}/ml_1m_ratings.dat', delimiter='::', header=None)
+    df = pd.read_csv(f'{dir_path}/ml_1m_ratings.dat', sep='::', header=None)
     df.rename(columns={0: 'user_id', 1: 'item_id', 2: 'rating', 3: 'timestamp'}, inplace=True)
 
     return df
@@ -86,6 +86,18 @@ def load_item_index2entity_id_file(dir_path: str):
     item_index2entity_id.rename(columns={0: 'item_index', 1: 'entity_id'}, inplace=True)
 
     return item_index2entity_id
+
+def load_final_movie_1m_ratings(dir_path: str):
+    """
+    returns the dataframe of the final preprocessed movielens 1m rating
+    file
+    """
+
+    ratings_final = pd.read_csv(f'{dir_path}/ratings_final.txt', sep='\t', header=None)
+    ratings_final.rename(columns={0: 'user_id', 1: 'item_id', 2: 'interaction'}, inplace=True)
+
+    return ratings_final
+    
 
 def load_data_splits(dataset: str, dir_path: str):
     """

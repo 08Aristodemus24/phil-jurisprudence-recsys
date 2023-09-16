@@ -175,8 +175,8 @@ Name: item_id, dtype: object
 **Prerequisites to do:**
 1. 
 **To do:**
-1. try python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.000075 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192
-2. python train_model.py -d juris-600k --protocol A --model_name FM --n_epochs 100 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192
+1. try `python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.000075 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
+2. `python train_model.py -d juris-600k --protocol A --model_name FM --n_epochs 100 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
 
 
 **Questions:**

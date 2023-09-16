@@ -20,7 +20,9 @@ from utilities.data_visualizers import view_vars, train_cross_results_v2
 
 # the functions from the preprocess.py file which we need to use in order to get hte
 # intermediate values before ratings_final.txt and kg_final.txt are outputted
-from utilities.data_preprocessors import (get_length__build_value_to_index, 
+from utilities.data_preprocessors import (get_unique_values, 
+    build_value_to_index,
+    column_to_val_to_index,
     separate_pos_neg_ratings,
     refactor_raw_ratings,
     split_data,
@@ -57,28 +59,28 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
 
     data = datasets[dataset]
 
-    # we must know number of total users and items first before splitting dataset
-    # in hate speech classifier we built the word to index dictionary first and
-    # configures the embedding matrix to have this dicitonary's number of unique words
-    # the embedding look up will have a set number of users & items taking into account 
-    # the unique users and items in the training, validation, and testing splits
-    n_users, user_to_index = get_length__build_value_to_index(data, 'user_id', show_logs=False)
-    n_items, item_to_index = get_length__build_value_to_index(data, 'item_id', show_logs=False)
-
-    # convert old id's to new id's
-    data['user_id'] = data['user_id'].apply(lambda user_id: user_to_index[user_id])
-    data['item_id'] = data['item_id'].apply(lambda item_id: item_to_index[item_id])
-
     if protocol == "A":
+        item_to_index = column_to_val_to_index(data, 'item_id')
+
         # separate positive and negative ratings
-        pos_user_ratings, neg_user_ratings = separate_pos_neg_ratings(data)
+        pos_user_ratings, neg_user_ratings = separate_pos_neg_ratings(data, show_logs=True)
 
         # finally sample unrated items as our negative class
-        refactored_data = refactor_raw_ratings(
-            pos_user_ratings=pos_user_ratings, 
-            neg_user_ratings=neg_user_ratings, 
-            item_to_index=item_to_index, 
-            show_logs=False)
+        refactored_data = refactor_raw_ratings(pos_user_ratings, neg_user_ratings, item_to_index, show_logs=False)
+
+        # we must know number of total users and items first before splitting dataset
+        # in hate speech classifier we built the word to index dictionary first and
+        # configures the embedding matrix to have this dicitonary's number of unique words
+        # the embedding look up will have a set number of users & items taking into account 
+        # the unique users and items in the training, validation, and testing splits
+        user_to_index = build_value_to_index(ratings=refactored_data, column='user_id', show_logs=False)
+        n_users = get_unique_values(ratings=refactored_data, column='user_id', show_logs=False)
+        item_to_index = build_value_to_index(ratings=refactored_data, column='item_id', show_logs=False)
+        n_items = get_unique_values(ratings=refactored_data, column='item_id', show_logs=False)
+
+        # convert old id's to new id's
+        refactored_data['user_id'] = refactored_data['user_id'].apply(lambda user_id: user_to_index[user_id])
+        refactored_data['item_id'] = refactored_data['item_id'].apply(lambda item_id: item_to_index[item_id])
 
         # split data into training, validation, and testing
         train_data, cross_data, test_data = split_data(refactored_data[['user_id', 'item_id']], refactored_data['interaction'])
@@ -93,10 +95,18 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
         print('Preprocessing finished!')
 
         # return data splits
-        return n_users, n_items, train_data, cross_data, test_data
-        # return refactored_data['user_id'].value_counts().size, refactored_data['item_id'].value_counts().size, train_data, cross_data, test_data
+        return n_users, n_items, train_data.iloc[:10000], cross_data, test_data
     
     elif protocol == "B":
+        user_to_index = build_value_to_index(ratings=data, column='user_id', show_logs=False)
+        n_users = get_unique_values(ratings=data, column='user_id', show_logs=False)
+        item_to_index = build_value_to_index(ratings=data, column='item_id', show_logs=False)
+        n_items = get_unique_values(ratings=data, column='item_id', show_logs=False)
+
+        # convert old id's to new id's
+        data['user_id'] = data['user_id'].apply(lambda user_id: user_to_index[user_id])
+        data['item_id'] = data['item_id'].apply(lambda item_id: item_to_index[item_id])
+
         # split data into training, validation, and testing
         # here it is imperative that we split first before normalization
         # to prevent data leakage across the validation and testing sets
@@ -156,7 +166,8 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
         'DFM': DFM(
             n_users=n_users, 
             n_items=n_items, 
-            emb_dim=n_features, 
+            emb_dim=n_features,
+            layers_dims=[8],
             lambda_=rec_lambda, 
             keep_prob=rec_keep_prob, 
             regularization=regularization)
