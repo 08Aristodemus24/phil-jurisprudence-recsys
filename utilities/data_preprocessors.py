@@ -249,6 +249,26 @@ def split_data(X: pd.DataFrame, Y: pd.Series):
     return train_data, cross_data, test_data
 
 
+def write_meta_data(file_name):
+    """
+    writes the meta data from preprocessed raw data
+    """
+    import os
+
+    filename = "/foo/bar/baz.txt"
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    with open(filename, "w") as f:
+        f.write("FOOBAR")
+
+
+def load_meta_data(file_path):
+    """
+    loads the created meta data from preprocessed raw data
+    """
+
+    return
+
+
 
 def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: bool=False, show_logs=True) -> (dict, dict):
     """

@@ -152,6 +152,9 @@ Name: item_id, dtype: object
 >>> temp.to_dict()
 {1: {1, 2}, 2: {9, 2}, 3: {50}, 5: {4}, 16: {9, 99, 4}, 20: {9}, 32: {100}, 56: {21}}
 ```
+
+6. make a function that saves preprocessed adn split data for easier access and its meta data like n_users, n_items for model arguments
+
 **Problems:**
 1. <s>A big problem is that upon using refactor_raw_ratings() to get only positive ratings and sample unwatched ratings, item_ids unsually doubles from 3706 items to now 6040 items. So why is that?</s>
 2. There is something wrong with split data or refactor raw ratings because there seems to be a mismatch in original number of user id's and item_id's. I suspect because user id and item ids are lessened because negative ratings are removed. Nevertheless following models and used dataset produce the ff. results:
