@@ -1,20 +1,18 @@
 from tensorflow.keras.callbacks import EarlyStopping
-
-# from models.test_arcs_a import FM, DFM, MKR
-from models.model_arcs import FM, DFM, MKR
-# from metrics.custom_metrics import f1_m
-
-from preprocess import main_preprocess, load_model
+from preprocess import main_preprocess
+from models.model_loader import load_model
 
 # the functions from the preprocess.py file which we need to use in order to get hte
 # intermediate values before ratings_final.txt and kg_final.txt are outputted
 from utilities.data_preprocessors import (build_results,
+    load_meta_data,
     read_item_index_to_entity_id_file, 
     convert_rating, 
     convert_kg
 )
 
 from utilities.data_visualizers import view_vars, train_cross_results_v2
+from utilities.data_loaders import load_data_splits
 
 from argparse import ArgumentParser, ArgumentTypeError, ArgumentError
 
@@ -24,7 +22,6 @@ if __name__ == "__main__":
     # instantiate parser to take args from user in command line
     parser = ArgumentParser()
     parser.add_argument('-d', type=str, default="juris-300k", help='dataset to use which can be juris-300k for the juris docs rating dataset or ml-1m for the movie lens rating dataset')
-    parser.add_argument('--protocol', type=str, default="A", help="the protocol or procedure to follow to preprocess the dataset which consists of either preprocessing for binary classification or for regression")
     parser.add_argument('--model_name', type=str, default="FM", help="which specific model to train")
     parser.add_argument('--n_features', type=int, default=10, help='number of features of decomposed matrices X, THETA, B_u, and B_i of Y')
     parser.add_argument('--n_epochs', type=int, default=300, help='the number of epochs')
@@ -37,10 +34,13 @@ if __name__ == "__main__":
     # parser.add_argument('--lr_kge', type=float, default=0.01, help='learning rate of KGE task')
     # parser.add_argument('--kge_interval', type=int, default=3, help='training interval of KGE task')
     args = parser.parse_args()
-    # print(args)
 
-    # load user-item rating dataset
-    n_users, n_items, train_data, cross_data, test_data = main_preprocess(args.d, args.protocol, show_logs=False)
+    # make general file name based on dataset
+    out_file = args.d.replace('-', '_')
+
+    # load user-item rating data splits and meta data
+    n_users, n_items = load_meta_data(f'./data/{args.d}/{out_file}_train_meta.json')
+    train_data, cross_data, test_data = load_data_splits(args.d, f'./data/{args.d}')
 
     # load model
     model = load_model(
@@ -66,16 +66,16 @@ if __name__ == "__main__":
         # callbacks=[EarlyStopping(monitor='val_loss', patience=3)]
     )
 
-    # # visualize model results
+    # visualize model results
     # train_cross_results_v2(
     #     results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
     #     epochs=history.epoch, 
     #     img_title='binary FM (factorization machine) performance')
     
-    # train_cross_results_v2(
-    #     results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
-    #     epochs=history.epoch, 
-    #     img_title='binary DFM (deep factorization machine) performance')
+    train_cross_results_v2(
+        results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
+        epochs=history.epoch, 
+        img_title='binary DFM (deep factorization machine) performance')
 
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='DFM (deep factorization machine) performance')

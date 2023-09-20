@@ -2,9 +2,11 @@ import argparse
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import itertools as it
-from concurrent.futures import ThreadPoolExecutor
 
+import itertools as it
+import json
+from concurrent.futures import ThreadPoolExecutor
+ 
 
 
 def has_duplicates(arr: list | np.ndarray) -> bool:
@@ -249,24 +251,25 @@ def split_data(X: pd.DataFrame, Y: pd.Series):
     return train_data, cross_data, test_data
 
 
-def write_meta_data(file_name):
+def write_meta_data(file_name: str, meta_data: dict):
     """
     writes the meta data from preprocessed raw data
     """
-    import os
-
-    filename = "/foo/bar/baz.txt"
-    os.makedirs(os.path.dirname(filename), exist_ok=True)
-    with open(filename, "w") as f:
-        f.write("FOOBAR")
-
+    
+    with open(file_name, "w") as out_file:
+        json.dump(meta_data, out_file)
+        out_file.close()
 
 def load_meta_data(file_path):
     """
     loads the created meta data from preprocessed raw data
     """
 
-    return
+    with open(file_path, "r") as in_file:
+        meta_data = json.load(in_file)
+        in_file.close()
+        
+    return meta_data
 
 
 

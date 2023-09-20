@@ -1,20 +1,3 @@
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.losses import (BinaryCrossentropy as bce_loss, 
-    MeanSquaredError as mse_loss
-)
-
-from tensorflow.keras.metrics import (BinaryAccuracy, 
-    Precision,
-    Recall,
-    AUC,
-    BinaryCrossentropy as bce_metric, 
-    MeanSquaredError as mse_metric
-)
-
-# from models.test_arcs_a import FM, DFM, MKR
-from models.model_arcs import FM, DFM, MKR
-# from metrics.custom_metrics import f1_m
-
 # the functions from the preprocess.py file which we need to use in order to get hte
 # intermediate values before ratings_final.txt and kg_final.txt are outputted
 from utilities.data_preprocessors import (get_unique_values, 
@@ -24,6 +7,7 @@ from utilities.data_preprocessors import (get_unique_values,
     refactor_raw_ratings,
     split_data,
     normalize_ratings,
+    write_meta_data,
     build_results,
     read_item_index_to_entity_id_file, 
     convert_rating, 
@@ -57,6 +41,9 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
 
     data = datasets[dataset]
 
+    # make general file name based on dataset
+    out_file = dataset.replace('-', '_')
+
     if protocol == "A":
         item_to_index = column_to_val_to_index(data, 'item_id')
 
@@ -83,6 +70,22 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
         # split data into training, validation, and testing
         train_data, cross_data, test_data = split_data(refactored_data[['user_id', 'item_id']], refactored_data['interaction'])
 
+        # define meta data to be used for writing data 
+        # for loading to later train model
+        meta_data = {
+            'n_users': n_users,
+            'n_items': n_items
+        }
+
+        # write train, cross, and test data so that preprocessing only runs once
+        # and outputted files are reusable without having to wait over and over
+        train_data.to_csv(f"./data/{dataset}/{out_file}_train.csv")
+        cross_data.to_csv(f"./data/{dataset}/{out_file}_cross.csv")
+        test_data.to_csv(f"./data/{dataset}/{out_file}_test.csv")
+
+        # write meta data for loading to later train model
+        write_meta_data(f'./data/{dataset}/{out_file}_train_meta.json', meta_data)
+
         if show_logs is True:
             print(f"unique interactions: {refactored_data['interaction'].value_counts()}")
             print(f"unique user_id's{refactored_data['user_id'].value_counts()}")
@@ -91,9 +94,6 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
             print(f'cross_data shape: {cross_data.shape}')
             print(f'test_data shape: {test_data.shape}')
         print('Preprocessing finished!')
-
-        # return data splits
-        return n_users, n_items, train_data, cross_data, test_data
     
     elif protocol == "B":
         user_to_index = build_value_to_index(ratings=data, column='user_id', show_logs=False)
@@ -114,10 +114,24 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
         train_data = normalize_ratings(train_data)
         cross_data = normalize_ratings(cross_data)
         test_data = normalize_ratings(test_data)
-        print('Preprocessing finished!')
 
-        # return data splits
-        return n_users, n_items, train_data, cross_data, test_data
+        # define meta data to be used for writing data 
+        # for loading to later train model
+        meta_data = {
+            'n_users': n_users,
+            'n_items': n_items
+        }
+
+        # write train, cross, and test data so that preprocessing only runs once
+        # and outputted files are reusable without having to wait over and over
+        train_data.to_csv(f"./data/{dataset}/{out_file}_train.csv")
+        cross_data.to_csv(f"./data/{dataset}/{out_file}_cross.csv")
+        test_data.to_csv(f"./data/{dataset}/{out_file}_test.csv")
+
+        # write meta data for loading to later train model
+        write_meta_data(f'./data/{dataset}/{out_file}_train_meta.json', meta_data)
+
+        print('Preprocessing finished!')
 
     elif protocol == "C":
         # will follow convert rating with knowledge graph into ratings_final.txt or ratings_final.csv
@@ -126,57 +140,11 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
         # for now this is 
         pass
 
-def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_features: int, epoch_to_rec_at: int, rec_alpha: float, rec_lambda: float, rec_keep_prob: float, regularization: str):
-    """
-    creates, compiles and returns chosen model to train
+if __name__ == "__main__":
+    # instantiate parser to take args from user in command line
+    parser = ArgumentParser()
+    parser.add_argument('-d', type=str, default="juris-300k", help='dataset to use which can be juris-300k for the juris docs rating dataset or ml-1m for the movie lens rating dataset')
+    parser.add_argument('--protocol', type=str, default="A", help="the protocol or procedure to follow to preprocess the dataset which consists of either preprocessing for binary classification or for regression")
+    args = parser.parse_args()
 
-    args: 
-        model_name - 
-        protocol - 
-        n_users - 
-        n_items - 
-        n_features - 
-        epoch_to_rec_at - 
-        rec_alpha - 
-        rec_lambda - 
-        rec_keep_prob - 
-        regularization - 
-    """
-    
-    protocols = {
-        'A': {
-            'loss': bce_loss(),
-            'metrics': [bce_metric(), BinaryAccuracy(), Precision(), Recall(), AUC()]#.extend([f1_m])
-        },
-        'B': {
-            'loss': mse_loss(),
-            'metrics': [mse_metric()]
-        }
-    }
-
-    models = {
-        'FM': FM(
-            n_users=n_users, 
-            n_items=n_items,
-            emb_dim=n_features,
-            lambda_=rec_lambda,
-            regularization=regularization),
-        'DFM': DFM(
-            n_users=n_users, 
-            n_items=n_items, 
-            emb_dim=n_features,
-            layers_dims=[8],
-            lambda_=rec_lambda, 
-            keep_prob=rec_keep_prob, 
-            regularization=regularization)
-    }
-
-    model = models[model_name]
-
-    model.compile(
-        optimizer=Adam(learning_rate=rec_alpha),
-        loss=protocols[protocol]['loss'],
-        metrics=protocols[protocol]['metrics']
-    )
-       
-    return model
+    main_preprocess(args.d, args.protocol, show_logs=False)
