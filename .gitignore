@@ -1,5 +1,5 @@
 /data/ml-1m/
 /data/ml1m-kg20k/
-/data/juris-300k/
-/data/juris-600k/
+/data/juris-300k/juris_300k_ratings.csv
+/data/juris-600k/juris_600k_ratings.csv
 /data/ratings/
