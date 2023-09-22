@@ -22,9 +22,11 @@ if __name__ == "__main__":
     # instantiate parser to take args from user in command line
     parser = ArgumentParser()
     parser.add_argument('-d', type=str, default="juris-300k", help='dataset to use which can be juris-300k for the juris docs rating dataset or ml-1m for the movie lens rating dataset')
+    parser.add_argument('--protocol', type=str, default="A", help="the protocol or procedure to follow to preprocess the dataset which consists of either preprocessing for binary classification or for regression")
     parser.add_argument('--model_name', type=str, default="FM", help="which specific model to train")
     parser.add_argument('--n_features', type=int, default=10, help='number of features of decomposed matrices X, THETA, B_u, and B_i of Y')
     parser.add_argument('--n_epochs', type=int, default=300, help='the number of epochs')
+    parser.add_argument('--layers_dims', nargs='+', type=int, default=[16, 16, 16], help='number of layers and number of nodes in each layer of the dnn')
     parser.add_argument('--epoch_to_rec_at', type=int, default=50, help='every epoch to record at')
     parser.add_argument('--rec_alpha', type=float, default=1e-4, help='learning rate of recommendation task')
     parser.add_argument('--rec_lambda', type=float, default=0.1, help='lambda value of regularization term in recommendation task')
@@ -39,7 +41,8 @@ if __name__ == "__main__":
     out_file = args.d.replace('-', '_')
 
     # load user-item rating data splits and meta data
-    n_users, n_items = load_meta_data(f'./data/{args.d}/{out_file}_train_meta.json')
+    meta_data = load_meta_data(f'./data/{args.d}/{out_file}_train_meta.json')
+    n_users, n_items = meta_data['n_users'], meta_data['n_items']
     train_data, cross_data, test_data = load_data_splits(args.d, f'./data/{args.d}')
 
     # load model
@@ -49,6 +52,7 @@ if __name__ == "__main__":
         n_users=n_users,
         n_items=n_items,
         n_features=args.n_features,
+        layers_dims=args.layers_dims,
         epoch_to_rec_at=args.epoch_to_rec_at,
         rec_alpha=args.rec_alpha,
         rec_lambda=args.rec_lambda,
@@ -75,7 +79,8 @@ if __name__ == "__main__":
     train_cross_results_v2(
         results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
         epochs=history.epoch, 
-        img_title='binary DFM (deep factorization machine) performance')
+        img_title='binary DFM (deep factorization machine) performance', 
+        image_only=True)
 
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
     # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='DFM (deep factorization machine) performance')

@@ -15,7 +15,7 @@ from tensorflow.keras.metrics import (BinaryAccuracy,
 from models.model_arcs import FM, DFM, MKR
 from metrics.custom_metrics import f1_m
 
-def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_features: int, epoch_to_rec_at: int, rec_alpha: float, rec_lambda: float, rec_keep_prob: float, regularization: str):
+def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_features: int, layers_dims: list, epoch_to_rec_at: int, rec_alpha: float, rec_lambda: float, rec_keep_prob: float, regularization: str):
     """
     creates, compiles and returns chosen model to train
 
@@ -35,7 +35,7 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
     protocols = {
         'A': {
             'loss': bce_loss(),
-            'metrics': [bce_metric(), BinaryAccuracy(), Precision(), Recall(), AUC()]#.extend([f1_m])
+            'metrics': [bce_metric(), BinaryAccuracy(), Precision(), Recall(), AUC(), f1_m]
         },
         'B': {
             'loss': mse_loss(),
@@ -54,7 +54,7 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
             n_users=n_users, 
             n_items=n_items, 
             emb_dim=n_features,
-            layers_dims=[8],
+            layers_dims=layers_dims,
             lambda_=rec_lambda, 
             keep_prob=rec_keep_prob, 
             regularization=regularization)

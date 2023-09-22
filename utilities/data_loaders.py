@@ -106,10 +106,10 @@ def load_data_splits(dataset: str, dir_path: str):
     the split final preprocessed data
     """
 
-    out_file = dataset.replace('-', '_') + '_ratings'
-    train_data = pd.read_csv(f'{dir_path}/{out_file}_final_train.csv')
-    cross_data = pd.read_csv(f'{dir_path}/{out_file}_final_cross.csv')
-    test_data = pd.read_csv(f'{dir_path}/{out_file}_final_test.csv')
+    out_file = dataset.replace('-', '_')
+    train_data = pd.read_csv(f'{dir_path}/{out_file}_train.csv', index_col=0)
+    cross_data = pd.read_csv(f'{dir_path}/{out_file}_cross.csv', index_col=0)
+    test_data = pd.read_csv(f'{dir_path}/{out_file}_test.csv', index_col=0)
 
     return train_data, cross_data, test_data
 

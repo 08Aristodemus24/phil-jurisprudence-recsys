@@ -105,6 +105,7 @@ class DFM(tf.keras.Model):
 
         # initialize concat layer as input to DNN
         self.concat_layer = tf.keras.layers.Concatenate(axis=2)
+        self.flatten_concat_emb_layer = tf.keras.layers.Flatten()
 
         # initialize dense and activation layers of DNN
         self.dense_layers, self.act_layers, self.dropout_layers = self.init_dense_act_drop_layers()
@@ -142,21 +143,22 @@ class DFM(tf.keras.Model):
         # concatenate the user_emb and item_emb vectors
         # then feed to fully connected deep neural net
         A = self.concat_layer([user_emb, item_emb])
+        flat_A = self.flatten_concat_emb_layer(A)
 
         # forward propagate through deep neural network according to number of layers
         for l in range(self.num_layers):
             # pass concatenated user_embedding and item embedding 
             # to dense layer to calculate Z at layer l
-            Z = self.dense_layers[l](A)
+            Z = self.dense_layers[l](flat_A)
 
             # activate output Z layer by passing to relu activation layer
-            A = self.act_layers[l](Z)
+            flat_A = self.act_layers[l](Z)
 
             if kwargs['training'] == True:
-                A = self.dropout_layers[l](A)
+                flat_A = self.dropout_layers[l](flat_A)
 
         # pass second to the last layer to a linear layer
-        A_last = self.last_dense_layer(A)
+        A_last = self.last_dense_layer(flat_A)
 
         # add the output to the flattened factorized matrix
         out = self.output_layer([A_last, fact_matrix_flat])

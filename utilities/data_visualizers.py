@@ -49,12 +49,12 @@ def describe_col(df, col):
     print(f'total unique values: {len(unique_ids)}')
     # print(unique_ids)
 
-def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure'):
+def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure', image_only=False):
     """
     plots the number of epochs against the cost given cost values across these epochs
     """
-    # # use matplotlib backend
-    # mpl.use('Agg')
+    # use matplotlib backend
+    mpl.use('Agg')
 
     figure = plt.figure(figsize=(15, 10))
     axis = figure.add_subplot()
@@ -70,8 +70,9 @@ def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure')
     axis.legend()
 
     plt.savefig(f'./figures & images/{img_title}.png')
-    plt.show()
-    
+
+    if image_only is False:
+        plt.show()
 
     # delete figure
     del figure
