@@ -173,8 +173,7 @@ Name: item_id, dtype: object
 **Prerequisites to do:**
 1. raise problem in stackvoerflow:
 RecSys model performance stalling at 47% AUC and F1-Score. Is the problem due to ratio of users to items in my dataset?
-
-
+2. use github URL of larj-corpus dataset instead of local path in retrieving the rating data
 
 **To do:**
 1. try `python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.000075 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
