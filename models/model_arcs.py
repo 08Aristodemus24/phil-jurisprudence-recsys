@@ -199,27 +199,3 @@ class DFM(tf.keras.Model):
 class MKR(tf.keras.Model):
     def __init__(self, ):
         super(MKR, self).__init__()
-
-
-
-        
-
-# # acts also as a script for testing
-# if __name__ == "__main__":
-#     user_ids = tf.random.uniform(shape=(10, 1), minval=1, maxval=5, dtype=tf.int32)
-#     item_ids = tf.random.uniform(shape=(10, 1), minval=1, maxval=10, dtype=tf.int32)
-#     ratings = tf.random.uniform(shape=(10, 1), minval=0.5, maxval=5, dtype=tf.float32)
-
-#     # 5 sample unique users and 10 sample unique items
-#     model = DFM(5, 10)
-#     model.compile(
-#         optimizer=Adam(learning_rate=0.001),
-#         loss=mse_loss(),
-#         metrics=[mse_metric()]
-#     )
-
-#     history = model.fit(
-#         [user_ids, item_ids],
-#         ratings,
-#         epochs=1,
-#     )
