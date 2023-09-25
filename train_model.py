@@ -44,6 +44,7 @@ if __name__ == "__main__":
     meta_data = load_meta_data(f'./data/{args.d}/{out_file}_train_meta.json')
     n_users, n_items = meta_data['n_users'], meta_data['n_items']
     train_data, cross_data, test_data = load_data_splits(args.d, f'./data/{args.d}')
+    print(train_data['interaction'].value_counts())
 
     # load model
     model = load_model(
@@ -67,7 +68,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         epochs=args.n_epochs,
         validation_data=([cross_data['user_id'], cross_data['item_id']], cross_data['interaction']),
-        callbacks=[EarlyStopping(monitor='val_f1_m', patience=50)]
+        # callbacks=[EarlyStopping(monitor='val_f1_m', patience=50)]
     )
 
     # visualize model results

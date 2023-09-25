@@ -1,0 +1,1 @@
+{"activation": "relu", "learning_rate": 0.0003, "lambda": 0.9, "dropout": 0.9}

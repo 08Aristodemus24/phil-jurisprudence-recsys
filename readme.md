@@ -173,6 +173,13 @@ Name: item_id, dtype: object
 **Prerequisites to do:**
 1. raise problem in stackvoerflow:
 RecSys model performance stalling at 47% AUC and F1-Score. Is the problem due to ratio of users to items in my dataset?
+
+I'm having trouble with making my validation metrics go down for the binary_crossentropy and go up for the F1-score and AUC. I've tried tuning my hyper parameters such as the number of latent features of the model (8), the learning rate (0.000075), the lambda in the regularization term (1.2), the the drop out rate (0.4), and the batch size (16384), which have seemingly maximum values you can give to where you can ensure the prevention of overfitting, but to no avail my validation F1-Score and AUC always stalls at around 47%, 52% at its highest if I increase my epochs to 500. It even got to the point that a higher batch size gave my RAM problems since I only use my mere CPU in this ML task (Because I've no graphics card unfortunately).
+
+Here is my model architecture which uses an embedding layer initially then essentially takes the output of this embedding layer and feeds it into two phases so to speak, one that will flatten the output of the embedding layer and one which concatenates the output of the embedding layer and feeds it into a fully connected network.
+
+So my question Could it be that my architecture is too complex or is my dataset the problem?
+
 2. use github URL of larj-corpus dataset instead of local path in retrieving the rating data
 
 **To do:**
@@ -180,6 +187,7 @@ RecSys model performance stalling at 47% AUC and F1-Score. Is the problem due to
 2. `python train_model.py -d juris-600k --protocol A --model_name FM --n_epochs 100 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
 3. in both models try bigger batch of 65536, 32768, 16384
 4. in DFM try keep probability of 0.6, alpha of 0.0001, lambda of 1.2
+5. python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 16384
 
 **Problems:**
 1. <s>There is something wrong with split data or refactor raw ratings because there seems to be a mismatch in original number of user id's and item_id's. I suspect because user id and item ids are lessened because negative ratings are removed. Nevertheless following models and used dataset produce the ff. results:</s>
