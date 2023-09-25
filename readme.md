@@ -203,6 +203,8 @@ So my question Could it be that my architecture is too complex or is my dataset 
 1. the higher the auc the more accurate the model is in classifying the 0 class as a 0 class and the 1 class as a 1 class for instance in a binary classification task. The more it is closer to one the more accurate it is the more it is closer to 0 the more it is inaccurate, if it is closer to 0.5 it means the model has no class separation capacity whatsoever
 
 **Articles:**
+1. Evaluating recommender systems
+* https://neptune.ai/blog/how-to-test-recommender-system
 
 
 ## Analyzing embeddings
