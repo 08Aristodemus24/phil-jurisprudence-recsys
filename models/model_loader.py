@@ -44,25 +44,31 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
     }
 
     models = {
-        'FM': FM(
-            n_users=n_users, 
-            n_items=n_items,
-            emb_dim=n_features,
-            lambda_=rec_lambda,
-            regularization=regularization),
-        'DFM': DFM(
-            n_users=n_users, 
-            n_items=n_items, 
-            emb_dim=n_features,
-            layers_dims=layers_dims,
-            lambda_=rec_lambda, 
-            keep_prob=rec_keep_prob, 
-            regularization=regularization)
+        'FM': {
+            "type": FM(
+                n_users=n_users, 
+                n_items=n_items,
+                emb_dim=n_features,
+                lambda_=rec_lambda,
+                regularization=regularization),
+            "name": "factorization machine"
+        },
+        'DFM': {
+            "type": DFM(
+                n_users=n_users, 
+                n_items=n_items, 
+                emb_dim=n_features,
+                layers_dims=layers_dims,
+                lambda_=rec_lambda, 
+                keep_prob=rec_keep_prob, 
+                regularization=regularization),
+            "name": "deep factorization machine"
+        }
     }
 
     model = models[model_name]
 
-    model.compile(
+    model["type"].compile(
         optimizer=Adam(learning_rate=rec_alpha),
         loss=protocols[protocol]['loss'],
         metrics=protocols[protocol]['metrics']

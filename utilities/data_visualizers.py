@@ -53,16 +53,45 @@ def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure',
     """
     plots the number of epochs against the cost given cost values across these epochs
     """
+
     # use matplotlib backend
     mpl.use('Agg')
 
     figure = plt.figure(figsize=(15, 10))
     axis = figure.add_subplot()
 
-    styles = [('p:', '#5d42f5'), ('h-', '#fc03a5'), ('o:', '#1e8beb'), ('x--','#1eeb8f'), ('+--', '#0eb802'), ('8-', '#f55600')]
+    styles = [
+        ('p:', '#f54949'), 
+        ('h-', '#f59a45'), 
+        ('o--', '#afb809'), 
+        ('x:','#51ad00'), 
+        ('+:', '#03a65d'), 
+        ('8-', '#035aa6'), 
+        ('.--', '#03078a'), 
+        ('>:', '#6902e6'),
+        ('p-', '#c005e6'),
+        ('h--', '#fa69a3'),
+        ('o:', '#240511'),
+        ('x-', '#052224'),
+        ('+--', '#402708'),
+        ('8:', '#000000')]
+        
 
     for index, (key, value) in enumerate(results.items()):
-        axis.plot(np.arange(len(epochs)), value, styles[index][0] ,color=styles[index][1], alpha=0.5, label=key)
+        if key == "loss" or key == "val_loss":
+            axis.plot(np.arange(len(epochs)), value, styles[index][0], color=styles[index][1], alpha=0.5, label=key)
+        else:
+            metric_perc = [round(val * 100, 2) for val in value]
+            axis.plot(np.arange(len(epochs)), metric_perc, styles[index][0], color=styles[index][1], alpha=0.5, label=key)
+
+    # annotate end of lines
+    for index, (key, value) in enumerate(results.items()):        
+        if key == "loss" or key == "val_loss":
+            last_loss_rounded = round(value[-1], 2)
+            axis.annotate(last_loss_rounded, xy=(epochs[-1], value[-1]), color=styles[index][1])
+        else: 
+            last_metric_perc = round(value[-1] * 100, 2)
+            axis.annotate(last_metric_perc, xy=(epochs[-1], value[-1] * 100), color=styles[index][1])
 
     axis.set_ylabel('metric value')
     axis.set_xlabel('epochs')

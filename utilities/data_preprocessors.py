@@ -239,7 +239,7 @@ def split_data(X: pd.DataFrame, Y: pd.Series):
     """
     
     X_trains, X_, Y_trains, Y_ = train_test_split(X, Y, test_size=0.3, random_state=0)
-    X_cross, X_tests, Y_cross, Y_tests = train_test_split(X_, Y_, test_size=0.3, random_state=0)
+    X_cross, X_tests, Y_cross, Y_tests = train_test_split(X_, Y_, test_size=0.5, random_state=0)
 
     # reintegrate Y outputs to X inputs because the combined
     # dataframe will be used as a whole for the normalization

@@ -187,7 +187,14 @@ So my question Could it be that my architecture is too complex or is my dataset 
 2. `python train_model.py -d juris-600k --protocol A --model_name FM --n_epochs 100 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
 3. in both models try bigger batch of 65536, 32768, 16384
 4. in DFM try keep probability of 0.6, alpha of 0.0001, lambda of 1.2
-5. python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 16384
+5. commands to use:
+* python train_model.py -d ml-1m --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --batch_size 8192
+* python train_model.py -d juris-300k --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
+* python train_model.py -d juris-300k --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
+* python train_model.py -d ml-1m --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --batch_size 8192
+* python train_model.py -d juris-300k --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
+* python train_model.py -d juris-300k --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
+
 
 **Problems:**
 1. <s>There is something wrong with split data or refactor raw ratings because there seems to be a mismatch in original number of user id's and item_id's. I suspect because user id and item ids are lessened because negative ratings are removed. Nevertheless following models and used dataset produce the ff. results:</s>

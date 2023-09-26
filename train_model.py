@@ -62,7 +62,7 @@ if __name__ == "__main__":
     )
 
     # train model
-    history = model.fit(
+    history = model["type"].fit(
         [train_data['user_id'], train_data['item_id']],
         train_data['interaction'],
         batch_size=args.batch_size,
@@ -70,18 +70,16 @@ if __name__ == "__main__":
         validation_data=([cross_data['user_id'], cross_data['item_id']], cross_data['interaction']),
         # callbacks=[EarlyStopping(monitor='val_f1_m', patience=50)]
     )
-
-    # visualize model results
-    # train_cross_results_v2(
-    #     results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
-    #     epochs=history.epoch, 
-    #     img_title='binary FM (factorization machine) performance')
     
     train_cross_results_v2(
-        results=build_results(history, metrics=['binary_crossentropy', 'val_binary_crossentropy', 'f1_m', 'val_f1_m', 'auc', 'val_auc']), 
+        results=build_results(
+            history, 
+            metrics=['loss', 'val_loss', 'binary_crossentropy', 'val_binary_crossentropy', 'binary_accuracy', 'val_binary_accuracy', 'precision', 'val_precision', 'recall', 'val_recall', 'f1_m', 'val_f1_m', 'auc', 'val_auc'] if args.protocol == "A" else ['loss', 'val_loss', 'mean_squared_error', 'val_mean_sqaured_error']), 
         epochs=history.epoch, 
-        img_title='binary DFM (deep factorization machine) performance', 
+        img_title="{} {} ({}) performance on {}".format(
+            "classification" if args.protocol == "A" else "regression",
+            args.model_name,
+            model["name"],
+            args.d
+        ), 
         image_only=True)
-
-    # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='FM (factorization machine) performance')
-    # train_cross_results_v2(results=build_results(history, metrics=['loss', 'val_loss',]), epochs=history.epoch, img_title='DFM (deep factorization machine) performance')
