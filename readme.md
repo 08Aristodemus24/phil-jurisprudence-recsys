@@ -203,15 +203,62 @@ So my question Could it be that my architecture is too complex or is my dataset 
 * <s>FM with juris_600k is not ok to begin with (even if it runs fine albeit with abysmal AUC, F1-Score, and Binary Accuracy results) since there is one user that is missing in the final refactored juris_600k dataset, where instead of 12034 users all in all there are now only 12033 users</s>
 * <s>DFM with juris_600k causes `Allocation of 268435456 exceeds 10% of free system memory.` & `OP_REQUIRES failed at segment_reduction_ops_impl.h:478 : INVALID_ARGUMENT: data.shape = [8192] does not start with segment_ids.shape = [67108864]`. Again I suspect this has something to do with batch size and the model architecture itself. **Ok found the problem because if I remove deep neural network architecture model works fine**. Resolved just added flatten layer after concatednation layer because I forgot</s>
 2. there seems to be overfitting due to the dataset itself because of the rat
+3. somehow the MKR model seems to be working fine giving out the ff. results
+```
+Instructions for updating:
+Please use `rate` instead of `keep_prob`. Rate should be set to `rate = 1 - keep_prob`.
+WARNING:tensorflow:From C:\ProgramData\Anaconda3\envs\phil-jurisprudence-recsys\lib\site-packages\tensorflow\python\util\dispatch.py:1176: calling expand_dims (from tensorflow.python.ops.array_ops) with dim is deprecated and will be removed in a future version.
+Instructions for updating:
+Use the `axis` argument instead
+epoch 0    train auc: 0.8884  acc: 0.8032    eval auc: 0.8833  acc: 0.8001    test auc: 0.8836  acc: 0.8003
+epoch 1    train auc: 0.8945  acc: 0.8123    eval auc: 0.8862  acc: 0.8051    test auc: 0.8867  acc: 0.8060
+epoch 2    train auc: 0.9007  acc: 0.8163    eval auc: 0.8873  acc: 0.8063    test auc: 0.8878  acc: 0.8059
+epoch 3    train auc: 0.9102  acc: 0.8260    eval auc: 0.8919  acc: 0.8101    test auc: 0.8919  acc: 0.8110
+epoch 4    train auc: 0.9210  acc: 0.8395    eval auc: 0.8987  acc: 0.8210    test auc: 0.8990  acc: 0.8203
+epoch 5    train auc: 0.9287  acc: 0.8498    eval auc: 0.9035  acc: 0.8265    test auc: 0.9038  acc: 0.8271
+epoch 6    train auc: 0.9331  acc: 0.8558    eval auc: 0.9056  acc: 0.8299    test auc: 0.9054  acc: 0.8298
+epoch 7    train auc: 0.9383  acc: 0.8620    eval auc: 0.9076  acc: 0.8328    test auc: 0.9076  acc: 0.8321
+epoch 8    train auc: 0.9404  acc: 0.8643    eval auc: 0.9097  acc: 0.8345    test auc: 0.9096  acc: 0.8339
+epoch 9    train auc: 0.9427  acc: 0.8675    eval auc: 0.9105  acc: 0.8347    test auc: 0.9103  acc: 0.8345
+epoch 10    train auc: 0.9453  acc: 0.8706    eval auc: 0.9112  acc: 0.8372    test auc: 0.9108  acc: 0.8358
+epoch 11    train auc: 0.9460  acc: 0.8714    eval auc: 0.9123  acc: 0.8376    test auc: 0.9117  acc: 0.8370
+epoch 12    train auc: 0.9474  acc: 0.8731    eval auc: 0.9118  acc: 0.8369    test auc: 0.9117  acc: 0.8370
+epoch 13    train auc: 0.9481  acc: 0.8744    eval auc: 0.9134  acc: 0.8390    test auc: 0.9125  acc: 0.8361
+epoch 14    train auc: 0.9491  acc: 0.8750    eval auc: 0.9133  acc: 0.8386    test auc: 0.9126  acc: 0.8374
+epoch 15    train auc: 0.9483  acc: 0.8740    eval auc: 0.9131  acc: 0.8380    test auc: 0.9122  acc: 0.8367
+epoch 16    train auc: 0.9502  acc: 0.8770    eval auc: 0.9134  acc: 0.8389    test auc: 0.9128  acc: 0.8384
+epoch 17    train auc: 0.9505  acc: 0.8776    eval auc: 0.9129  acc: 0.8397    test auc: 0.9123  acc: 0.8381
+epoch 18    train auc: 0.9509  acc: 0.8777    eval auc: 0.9140  acc: 0.8401    test auc: 0.9134  acc: 0.8392
+epoch 19    train auc: 0.9516  acc: 0.8787    eval auc: 0.9136  acc: 0.8398    test auc: 0.9129  acc: 0.8386
+```
 
 **Questions:**
 
 **Insights:**
 1. the higher the auc the more accurate the model is in classifying the 0 class as a 0 class and the 1 class as a 1 class for instance in a binary classification task. The more it is closer to one the more accurate it is the more it is closer to 0 the more it is inaccurate, if it is closer to 0.5 it means the model has no class separation capacity whatsoever
+2. My hypothesis is why precision@k, recall@k, accuracy@k, and f1@k is used in binary framed recommender systems is because the positively interacted upon items labeled as 1 and the unrated items of the users that have rated at least 1 positive item labeled 0
+
+For example, the user has watched 6 movies, and in the first recommendation list, 2 of them are relevant. In the second list, 1 of them are relevant, the meaning of the two relevant movies in the former user is the items he/she has had a positive interaction with or will have a positive interaction with
+
+```
+______|item 1|item 2|item 3|item 4|item 5|
+user 1|  1   |  0   |  0   |  0   |  1   |
+------|------|------|------|------|------|
+user 2|  0   |  1   |  1   |  1   |  0   |
+------|------|------|------|------|------|
+user 3|  1   |  1   |  0   |  1   |  0   |
+------|------|------|------|------|------|
+user 4|  1   |  0   |  1   |  1   |  1   |
+------|------|------|------|------|------|
+user 5|  0   |  1   |  0   |  1   |  0   |
+```
+
+In training say for user 1 we learned to predict properly the interaction between this user and item 1 item 2 and item 4 as our part training set, which are 1, 0, and 0. And we wanted to predict the rest of the items of user 1 which are items 3 and 5 which have interactions 0 and 1 respectively. Should the model hypothetically not overfit then in our cross validation data if we predict 1 correctly as the interaction between item 5 and user 1 then we would have now recommended an item that they may potentially like
 
 **Articles:**
 1. Evaluating recommender systems
 * https://neptune.ai/blog/how-to-test-recommender-system
+* https://www.shaped.ai/blog/evaluating-recommendation-systems-part-1
 
 
 ## Analyzing embeddings
