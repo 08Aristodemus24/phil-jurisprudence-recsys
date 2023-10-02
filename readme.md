@@ -189,11 +189,15 @@ So my question Could it be that my architecture is too complex or is my dataset 
 4. in DFM try keep probability of 0.6, alpha of 0.0001, lambda of 1.2
 5. commands to use:
 * python train_model.py -d ml-1m --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --batch_size 8192
+
 * python train_model.py -d juris-300k --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
 * python train_model.py -d juris-300k --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
 * python train_model.py -d ml-1m --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --batch_size 8192
 * python train_model.py -d juris-300k --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
 * python train_model.py -d juris-300k --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --rec_keep_prob 0.1 --batch_size 8192
+
+* python train_model.py -d juris-600k --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --batch_size 8192
+* python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --rec_keep_prob 0.7 --batch_size 8192
 
 
 **Problems:**
@@ -231,6 +235,12 @@ epoch 17    train auc: 0.9505  acc: 0.8776    eval auc: 0.9129  acc: 0.8397    t
 epoch 18    train auc: 0.9509  acc: 0.8777    eval auc: 0.9140  acc: 0.8401    test auc: 0.9134  acc: 0.8392
 epoch 19    train auc: 0.9516  acc: 0.8787    eval auc: 0.9136  acc: 0.8398    test auc: 0.9129  acc: 0.8386
 ```
+
+4. So my problem lies with where I preprocessed the data because in wang's paper they managed to change the order of the user id's themselves such that they were all ordered from the first user (even if it had user id 1000 for instance) which was now set to a new id 0 representing a user with the positive item set. 
+
+This hypothesis has been rejected because even ordering the data doesn't have an effect on performance
+
+4. next hypothesis is, does embeddings have to do with it? When wang preprocessed the movie lens data set did both the train and cross data splits still preserve the number of unique users and unique items
 
 **Questions:**
 

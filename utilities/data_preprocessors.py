@@ -233,17 +233,41 @@ def column_to_val_to_index(ratings: pd.DataFrame, column: str):
 
 
 
-def split_data(X: pd.DataFrame, Y: pd.Series):
+def split_data(X: pd.DataFrame, Y: pd.Series, option: str='intact'):
     """
     splits the given dataframe into training, cross-validation, and testing sets
-    """
-    
-    X_trains, X_, Y_trains, Y_ = train_test_split(X, Y, test_size=0.3, random_state=0)
-    X_cross, X_tests, Y_cross, Y_tests = train_test_split(X_, Y_, test_size=0.5, random_state=0)
 
-    # reintegrate Y outputs to X inputs because the combined
-    # dataframe will be used as a whole for the normalization
-    # function
+    shoudl the option argument be set to intact the function will follow a different
+    data splitting technique such that it will preserve the ordering of the user indeces
+    and item indeces in the rating file
+    """
+    if option != 'intact':
+        X_trains, X_, Y_trains, Y_ = train_test_split(X, Y, test_size=0.3, random_state=0)
+        X_cross, X_tests, Y_cross, Y_tests = train_test_split(X_, Y_, test_size=0.5, random_state=0)
+
+        # reintegrate Y outputs to X inputs because the combined
+        # dataframe will be used as a whole for the normalization
+        # function
+        train_data = pd.concat([X_trains, Y_trains], axis=1).reset_index(drop=True)
+        cross_data = pd.concat([X_cross, Y_cross], axis=1).reset_index(drop=True)
+        test_data = pd.concat([X_tests, Y_tests], axis=1).reset_index(drop=True)
+
+        return train_data, cross_data, test_data
+    
+    # train:eval:test = 70%:15%:15% split
+    eval_ratio = 0.3
+    test_ratio = 0.3
+    n_ratings = X.shape[0]
+
+    eval_indices = np.random.choice(list(range(n_ratings)), size=int(n_ratings * eval_ratio), replace=False)
+    left = set(range(n_ratings)) - set(eval_indices)
+    test_indices = np.random.choice(list(left), size=int(n_ratings * test_ratio), replace=False)
+    train_indices = list(left - set(test_indices))
+
+    X_trains, Y_trains = X.iloc[train_indices], Y.iloc[train_indices]
+    X_cross, Y_cross = X.iloc[eval_indices], Y.iloc[eval_indices]
+    X_tests, Y_tests = X.iloc[test_indices], Y.iloc[test_indices]
+
     train_data = pd.concat([X_trains, Y_trains], axis=1).reset_index(drop=True)
     cross_data = pd.concat([X_cross, Y_cross], axis=1).reset_index(drop=True)
     test_data = pd.concat([X_tests, Y_tests], axis=1).reset_index(drop=True)
@@ -307,17 +331,31 @@ def separate_pos_neg_ratings(ratings: pd.DataFrame, threshold: int=4, with_kg: b
 
 
 def refactor_raw_ratings(pos_user_ratings: dict, neg_user_ratings: dict, item_to_index: dict, show_logs=True):
-    # bug may be in item_to_index
-    def helper(pos_user_rating):
-        users_id = []
-        users_new_item_set = []
-        users_interaction = []
+    # here we declare a new dicitonary for if the old user index
+    # is; not yet in this dictionary we append it to the dictionary
+    # and use this newly appended unique value incrementing from 0
+    # to however many users we have that have a positive item set
+    new_user_indeces = {}
+    user_count = 0
 
-        # extract current user_id, and the corresponding item set
-        # they've positively rated, in the concurrent process
-        user_id, pos_item_set = pos_user_rating
+    users_id = []
+    users_new_item_set = []
+    users_interaction = []
 
-        item_set = set(item_to_index.values())
+    # used for subtracting the unrated items from both the 
+    # positive item sets and even negative item sets of a user
+    item_set = set(item_to_index.values())
+
+    for old_user_id, pos_item_set in pos_user_ratings.items():
+        if old_user_id not in new_user_indeces:
+            new_user_indeces[old_user_id] = user_count
+            user_count += 1
+        new_user_id = new_user_indeces[old_user_id]
+
+        for item in pos_item_set:
+            users_id.append(new_user_id)
+            users_new_item_set.append(item)
+            users_interaction.append(1)
 
         # subtract the new item set indeces to the new positive item set indeces
         # of a user to determine which items have not been interacted by user
@@ -326,41 +364,31 @@ def refactor_raw_ratings(pos_user_ratings: dict, neg_user_ratings: dict, item_to
         # if a negative rating exists for a user extract this negative item set
         # and subtract again the potential unrated items of a user from this 
         # negative item set
-        if user_id in neg_user_ratings:
-            neg_item_set = neg_user_ratings[user_id]
+        if old_user_id in neg_user_ratings:
+            neg_item_set = neg_user_ratings[old_user_id]
             unrated_item_set = unrated_item_set - neg_item_set
-
-        for pos_item in pos_item_set:
-            users_id.append(user_id)
-            users_new_item_set.append(pos_item)
-            users_interaction.append(1)
 
         # check if users unrated item set is equal to or greater than length
         # of positive item set of that user. This will be a constraint we 
-        # must add to avoid any future errors when sampling. 
+        # must add to avoid any future errors when sampling, because larger
+        # unrated item set is smaller then sampling without replacement using
+        # the length of the positive won't be possible, and will throw an error
         num_items_to_sample = len(pos_item_set) if len(unrated_item_set) >= len(pos_item_set) else len(unrated_item_set)
-        
+
         # for every positive interaction we sample the same 
         # amount from the unrated item set and use these
         # as our not interacted samples
         for unrated_item in np.random.choice(list(unrated_item_set), size=num_items_to_sample, replace=False):
-            users_id.append(user_id)
+            users_id.append(new_user_id)
             users_new_item_set.append(unrated_item)
             users_interaction.append(0)
 
         if show_logs is True:
-            print(user_id)
+            print(f'old user id: {old_user_id}, new user id: {new_user_id}')
             print(pos_item_set)
             print(len(pos_item_set), len(unrated_item_set))
-        
-        return pd.DataFrame({'user_id': users_id, 'item_id': users_new_item_set, 'interaction': users_interaction})
 
-    with ThreadPoolExecutor() as executor:
-        results = list(executor.map(helper, pos_user_ratings.items()))
-        comb_results = pd.concat(results, axis=0)
-        final_result = comb_results.sample(frac=1).reset_index(drop=True, inplace=False)
-
-    return final_result
+    return pd.DataFrame({'user_id': users_id, 'item_id': users_new_item_set, 'interaction': users_interaction})
 
 
 

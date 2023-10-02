@@ -24,7 +24,7 @@ from argparse import ArgumentParser, ArgumentTypeError, ArgumentError
 import json
 
 
-def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
+def main_preprocess(dataset: str, protocol: str, split_method: str, show_logs: bool):
     """
     preprocesses the data and then returns the training, validation, 
     and testing splits, and returns the unique number of users and items
@@ -48,7 +48,7 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
         item_to_index = column_to_val_to_index(data, 'item_id')
 
         # separate positive and negative ratings
-        pos_user_ratings, neg_user_ratings = separate_pos_neg_ratings(data, show_logs=True)
+        pos_user_ratings, neg_user_ratings = separate_pos_neg_ratings(data, show_logs=False)
 
         # finally sample unrated items as our negative class
         refactored_data = refactor_raw_ratings(pos_user_ratings, neg_user_ratings, item_to_index, show_logs=False)
@@ -68,7 +68,7 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
         refactored_data['item_id'] = refactored_data['item_id'].apply(lambda item_id: item_to_index[item_id])
 
         # split data into training, validation, and testing
-        train_data, cross_data, test_data = split_data(refactored_data[['user_id', 'item_id']], refactored_data['interaction'])
+        train_data, cross_data, test_data = split_data(refactored_data[['user_id', 'item_id']], refactored_data['interaction'], option=split_method)
 
         # define meta data to be used for writing data 
         # for loading to later train model
@@ -87,12 +87,25 @@ def main_preprocess(dataset: str, protocol: str, show_logs: bool=True):
         write_meta_data(f'./data/{dataset}/{out_file}_train_meta.json', meta_data)
 
         if show_logs is True:
+            print(f'refactored_data shape: {refactored_data.shape}')
             print(f"unique interactions: {refactored_data['interaction'].value_counts()}")
             print(f"unique user_id's{refactored_data['user_id'].value_counts()}")
             print(f"unique item_id's{refactored_data['item_id'].value_counts()}")
+
             print(f'train_data shape: {train_data.shape}')
+            print(f"unique interactions: {train_data['interaction'].value_counts()}")
+            print(f"unique user_id's{train_data['user_id'].value_counts()}")
+            print(f"unique item_id's{train_data['item_id'].value_counts()}")
+
             print(f'cross_data shape: {cross_data.shape}')
+            print(f"unique interactions: {cross_data['interaction'].value_counts()}")
+            print(f"unique user_id's{cross_data['user_id'].value_counts()}")
+            print(f"unique item_id's{cross_data['item_id'].value_counts()}")
+
             print(f'test_data shape: {test_data.shape}')
+            print(f"unique interactions: {test_data['interaction'].value_counts()}")
+            print(f"unique user_id's{test_data['user_id'].value_counts()}")
+            print(f"unique item_id's{test_data['item_id'].value_counts()}")
         print('Preprocessing finished!')
     
     elif protocol == "B":
@@ -145,6 +158,10 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument('-d', type=str, default="juris-300k", help='dataset to use which can be juris-300k for the juris docs rating dataset or ml-1m for the movie lens rating dataset')
     parser.add_argument('--protocol', type=str, default="A", help="the protocol or procedure to follow to preprocess the dataset which consists of either preprocessing for binary classification or for regression")
+    parser.add_argument('--split_method', type=str, default="intact", help="the method to use to split the dataset which either \
+        preserves the order of the unique users in training data based on the final preprocessed dataset even after splitting or \
+        just randomly splits the data and shuffles it")
+    parser.add_argument('--show_logs', type=bool, default=True, help='shows logs to view important values after preprocessing')
     args = parser.parse_args()
 
-    main_preprocess(args.d, args.protocol, show_logs=False)
+    main_preprocess(args.d, args.protocol, args.split_method, show_logs=args.show_logs)
