@@ -44,7 +44,6 @@ if __name__ == "__main__":
     meta_data = load_meta_data(f'./data/{args.d}/{out_file}_train_meta.json')
     n_users, n_items = meta_data['n_users'], meta_data['n_items']
     train_data, cross_data, test_data = load_data_splits(args.d, f'./data/{args.d}')
-    print(train_data['interaction'].value_counts())
 
     # load model
     model = load_model(
@@ -64,22 +63,34 @@ if __name__ == "__main__":
     # train model
     history = model["type"].fit(
         [train_data['user_id'], train_data['item_id']],
-        train_data['interaction'],
+        train_data['interaction'] if args.protocol == "A" else train_data['normed_rating'],
         batch_size=args.batch_size,
         epochs=args.n_epochs,
-        validation_data=([cross_data['user_id'], cross_data['item_id']], cross_data['interaction']),
-        callbacks=[EarlyStopping(monitor='val_f1_m', patience=4)]
+        validation_data=([cross_data['user_id'], cross_data['item_id']], cross_data['interaction'] if args.protocol == "A" else cross_data['normed_rating']),
+        callbacks=[EarlyStopping(monitor='val_f1_m', patience=10)] if args.protocol == "A" else [EarlyStopping(monitor='val_root_mean_squared_error', patience=10)]
     )
     
-    train_cross_results_v2(
-        results=build_results(
-            history, 
-            metrics=['loss', 'val_loss', 'binary_crossentropy', 'val_binary_crossentropy', 'binary_accuracy', 'val_binary_accuracy', 'precision', 'val_precision', 'recall', 'val_recall', 'f1_m', 'val_f1_m', 'auc', 'val_auc'] if args.protocol == "A" else ['loss', 'val_loss', 'mean_squared_error', 'val_mean_sqaured_error']), 
-        epochs=history.epoch, 
-        img_title="{} {} ({}) performance on {}".format(
-            "classification" if args.protocol == "A" else "regression",
-            args.model_name,
-            model["name"],
-            args.d
-        ), 
-        image_only=True)
+    metrics_to_use = metrics=['loss', 'val_loss', 'binary_crossentropy', 'val_binary_crossentropy', 'binary_accuracy', 'val_binary_accuracy', 'precision', 'val_precision', 'recall', 'val_recall', 'f1_m', 'val_f1_m', 'auc', 'val_auc'] if args.protocol == "A" else ['loss', 'val_loss', 'mean_squared_error', 'val_mean_squared_error', 'root_mean_squared_error', 'val_root_mean_squared_error']
+    for index in range(0, len(metrics) - 1, 2):
+        # >>> list(range(0, 5, 2))
+        # [0, 2, 4]
+        metrics_indeces = (index, index + 1)
+
+        train_cross_results_v2(
+            results=build_results(
+                history,
+                metrics=(metrics_to_use[index], metrics_to_use[index + 1])),
+
+            curr_metrics_indeces=metrics_indeces,
+            epochs=history.epoch, 
+            img_title="{} {} ({}) {} performance on {}".format(
+                "classification" if args.protocol == "A" else "regression",
+                args.model_name,
+                model["name"],
+                metrics_to_use[index],
+                args.d
+            ), 
+
+            image_only=True)
+    
+    model["type"].save_weights('./trained models/{}_{}'.format(args.model_name, out_file))

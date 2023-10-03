@@ -8,11 +8,12 @@ from tensorflow.keras.metrics import (BinaryAccuracy,
     Recall,
     AUC,
     BinaryCrossentropy as bce_metric, 
-    MeanSquaredError as mse_metric
+    MeanSquaredError as mse_metric,
+    RootMeanSquaredError
 )
 
-# from test_arcs_a import FM, DFM, MKR
-from models.model_arcs import FM, DFM, MKR
+from models.test_arcs_a import FM as FM_r, DFM as DFM_r
+from models.model_arcs import FM, DFM
 from metrics.custom_metrics import f1_m
 
 def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_features: int, layers_dims: list, epoch_to_rec_at: int, rec_alpha: float, rec_lambda: float, rec_keep_prob: float, regularization: str):
@@ -34,12 +35,12 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
     
     protocols = {
         'A': {
-            'loss': bce_loss(),
-            'metrics': [bce_metric(), BinaryAccuracy(), Precision(), Recall(), AUC(), f1_m]
+            'loss': bce_loss(from_logits=True),
+            'metrics': [bce_metric(from_logits=True), BinaryAccuracy(), Precision(), Recall(), AUC(), f1_m]
         },
         'B': {
             'loss': mse_loss(),
-            'metrics': [mse_metric()]
+            'metrics': [mse_metric(), RootMeanSquaredError()]
         }
     }
 
@@ -50,7 +51,13 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
                 n_items=n_items,
                 emb_dim=n_features,
                 lambda_=rec_lambda,
-                regularization=regularization),
+                regularization=regularization) if protocol == "A" else FM_r(
+                    n_users=n_users,
+                    n_items=n_items,
+                    emb_dim=n_features,
+                    lambda_=rec_alpha,
+                    regularization=regularization
+                ),
             "name": "factorization machine"
         },
         'DFM': {
@@ -61,7 +68,15 @@ def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_fea
                 layers_dims=layers_dims,
                 lambda_=rec_lambda, 
                 keep_prob=rec_keep_prob, 
-                regularization=regularization),
+                regularization=regularization) if protocol == "A" else DFM_r(
+                    n_users=n_users, 
+                    n_items=n_items, 
+                    emb_dim=n_features,
+                    layers_dims=layers_dims,
+                    lambda_=rec_lambda, 
+                    keep_prob=rec_keep_prob, 
+                    regularization=regularization
+                ),
             "name": "deep factorization machine"
         }
     }

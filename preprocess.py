@@ -8,6 +8,7 @@ from utilities.data_preprocessors import (get_unique_values,
     split_data,
     normalize_ratings,
     write_meta_data,
+    create_rating_int_matrix,
     build_results,
     read_item_index_to_entity_id_file, 
     convert_rating, 
@@ -32,7 +33,6 @@ def main_preprocess(dataset: str, protocol: str, split_method: str, show_logs: b
     in the dataset
     """
     print(f'Commencing preprocessing of {dataset}...')
-    print(dataset)
 
     # dataset to choose from
     datasets = {
@@ -70,6 +70,10 @@ def main_preprocess(dataset: str, protocol: str, split_method: str, show_logs: b
         refactored_data['user_id'] = refactored_data['user_id'].apply(lambda user_id: user_to_index[user_id])
         refactored_data['item_id'] = refactored_data['item_id'].apply(lambda item_id: item_to_index[item_id])
 
+        # create user-item rating and interaction matrices to check
+        # sparsity and inversely density of data
+        Y, R = create_rating_int_matrix(data, 'rating', n_users, n_items, show_logs=True)
+
         # split data into training, validation, and testing
         train_data, cross_data, test_data = split_data(refactored_data[['user_id', 'item_id']], refactored_data['interaction'], option=split_method)
 
@@ -90,25 +94,27 @@ def main_preprocess(dataset: str, protocol: str, split_method: str, show_logs: b
         write_meta_data(f'./data/{dataset}/{out_file}_train_meta.json', meta_data)
 
         if show_logs is True:
-            print(f'refactored_data shape: {refactored_data.shape}')
-            print(f"unique interactions: {refactored_data['interaction'].value_counts()}")
-            print(f"unique user_id's{refactored_data['user_id'].value_counts()}")
-            print(f"unique item_id's{refactored_data['item_id'].value_counts()}")
+            print(f'refactored_data shape: {refactored_data.shape}\n')
+            print(f"unique interactions: \n{refactored_data['interaction'].value_counts()}\n")
+            print(f"unique user_id's\n{refactored_data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{refactored_data['item_id'].value_counts()}\n")
 
-            print(f'train_data shape: {train_data.shape}')
-            print(f"unique interactions: {train_data['interaction'].value_counts()}")
-            print(f"unique user_id's{train_data['user_id'].value_counts()}")
-            print(f"unique item_id's{train_data['item_id'].value_counts()}")
+            print(f'train_data shape: {train_data.shape}\n')
+            print(f"unique interactions: \n{train_data['interaction'].value_counts()}\n")
+            print(f"unique user_id's\n{train_data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{train_data['item_id'].value_counts()}\n")
 
-            print(f'cross_data shape: {cross_data.shape}')
-            print(f"unique interactions: {cross_data['interaction'].value_counts()}")
-            print(f"unique user_id's{cross_data['user_id'].value_counts()}")
-            print(f"unique item_id's{cross_data['item_id'].value_counts()}")
+            print(f'cross_data shape: {cross_data.shape}\n')
+            print(f"unique interactions: \n{cross_data['interaction'].value_counts()}\n")
+            print(f"unique user_id's\n{cross_data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{cross_data['item_id'].value_counts()}\n")
 
-            print(f'test_data shape: {test_data.shape}')
-            print(f"unique interactions: {test_data['interaction'].value_counts()}")
-            print(f"unique user_id's{test_data['user_id'].value_counts()}")
-            print(f"unique item_id's{test_data['item_id'].value_counts()}")
+            print(f'test_data shape: {test_data.shape}\n')
+            print(f"unique interactions: \n{test_data['interaction'].value_counts()}\n")
+            print(f"unique user_id's\n{test_data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{test_data['item_id'].value_counts()}\n")
+
+            print(f"")
         print('Preprocessing finished!')
     
     elif protocol == "B":
@@ -120,6 +126,10 @@ def main_preprocess(dataset: str, protocol: str, split_method: str, show_logs: b
         # convert old id's to new id's
         data['user_id'] = data['user_id'].apply(lambda user_id: user_to_index[user_id])
         data['item_id'] = data['item_id'].apply(lambda item_id: item_to_index[item_id])
+
+        # create user-item rating and interaction matrices to check
+        # sparsity and inversely density of data
+        Y, R = create_rating_int_matrix(data, 'rating', n_users, n_items, show_logs=True)
 
         # split data into training, validation, and testing
         # here it is imperative that we split first before normalization
@@ -146,7 +156,26 @@ def main_preprocess(dataset: str, protocol: str, split_method: str, show_logs: b
 
         # write meta data for loading to later train model
         write_meta_data(f'./data/{dataset}/{out_file}_train_meta.json', meta_data)
+        if show_logs is True:
+            print(f'data shape: {data.shape}\n')
+            print(f"unique ratings: \n{data['rating'].value_counts()}\n")
+            print(f"unique user_id's\n{data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{data['item_id'].value_counts()}\n")
 
+            print(f'train_data shape: {train_data.shape}\n')
+            print(f"unique ratings: \n{train_data['rating'].value_counts()}\n")
+            print(f"unique user_id's\n{train_data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{train_data['item_id'].value_counts()}\n")
+
+            print(f'cross_data shape: {cross_data.shape}\n')
+            print(f"unique ratings: \n{cross_data['rating'].value_counts()}\n")
+            print(f"unique user_id's\n{cross_data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{cross_data['item_id'].value_counts()}\n")
+
+            print(f'test_data shape: {test_data.shape}\n')
+            print(f"unique ratings: \n{test_data['rating'].value_counts()}\n")
+            print(f"unique user_id's\n{test_data['user_id'].value_counts()}\n")
+            print(f"unique item_id's\n{test_data['item_id'].value_counts()}\n")
         print('Preprocessing finished!')
 
     elif protocol == "C":

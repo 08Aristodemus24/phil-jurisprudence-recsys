@@ -49,7 +49,7 @@ def describe_col(df, col):
     print(f'total unique values: {len(unique_ids)}')
     # print(unique_ids)
 
-def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure', image_only=False):
+def train_cross_results_v2(results: dict, epochs: list, curr_metrics_indeces: tuple, img_title: str='figure', image_only=False):
     """
     plots the number of epochs against the cost given cost values across these epochs
     """
@@ -75,23 +75,25 @@ def train_cross_results_v2(results: dict, epochs: list, img_title: str='figure',
         ('x-', '#052224'),
         ('+--', '#402708'),
         ('8:', '#000000')]
-        
 
     for index, (key, value) in enumerate(results.items()):
         if key == "loss" or key == "val_loss":
-            axis.plot(np.arange(len(epochs)), value, styles[index][0], color=styles[index][1], alpha=0.5, label=key)
+            # e.g. loss, val_loss has indeces 0 and 1
+            # binary_cross_entropy, val_binary_cross_entropy 
+            # has indeces 2 and 3
+            axis.plot(np.arange(len(epochs)), value, styles[curr_metrics_indeces[index]][0], color=styles[curr_metrics_indeces[index]][1], alpha=0.5, label=key)
         else:
             metric_perc = [round(val * 100, 2) for val in value]
-            axis.plot(np.arange(len(epochs)), metric_perc, styles[index][0], color=styles[index][1], alpha=0.5, label=key)
+            axis.plot(np.arange(len(epochs)), metric_perc, styles[curr_metrics_indeces[index]][0], color=styles[curr_metrics_indeces[index]][1], alpha=0.5, label=key)
 
     # annotate end of lines
     for index, (key, value) in enumerate(results.items()):        
         if key == "loss" or key == "val_loss":
             last_loss_rounded = round(value[-1], 2)
-            axis.annotate(last_loss_rounded, xy=(epochs[-1], value[-1]), color=styles[index][1])
+            axis.annotate(last_loss_rounded, xy=(epochs[-1], value[-1]), color=styles[curr_metrics_indeces[index]][1])
         else: 
             last_metric_perc = round(value[-1] * 100, 2)
-            axis.annotate(last_metric_perc, xy=(epochs[-1], value[-1] * 100), color=styles[index][1])
+            axis.annotate(last_metric_perc, xy=(epochs[-1], value[-1] * 100), color=styles[curr_metrics_indeces[index]][1])
 
     axis.set_ylabel('metric value')
     axis.set_xlabel('epochs')

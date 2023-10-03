@@ -61,7 +61,8 @@ class FM(tf.keras.Model):
         # out = tf.linalg.matmul(user_emb, tf.transpose(item_emb, perm=[0, 2, 1])) + user_emb_bias + item_emb_bias
         user_item_dot = self.dot_layer([user_emb, tf.transpose(item_emb, perm=[0, 2, 1])])
         sum_ = self.add_layer([user_item_dot, user_emb_bias, item_emb_bias])
-        out = self.out_layer(sum_)
+        # out = self.out_layer(sum_)
+        out = sum_
 
         return out
 
@@ -169,7 +170,8 @@ class DFM(tf.keras.Model):
 
         # pass the sum of last dense layer and the flattened 
         # factorized matrix to a sigmoid activation function
-        out = self.out_layer(sum_)
+        # out = self.out_layer(sum_)
+        out = sum_
 
         return out
 

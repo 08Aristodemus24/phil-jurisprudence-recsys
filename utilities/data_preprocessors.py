@@ -2,10 +2,39 @@ import argparse
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from scipy.sparse import csr_matrix, issparse
 
 import itertools as it
 import json
 from concurrent.futures import ThreadPoolExecutor
+
+def create_rating_int_matrix(ratings: pd.DataFrame, target: pd.Series | list | np.ndarray, n_users, n_items, show_logs=True):
+    Y = csr_matrix(
+        arg1=(ratings[target], (ratings['user_id'], ratings['item_id'])),
+        shape=(n_users, n_items))
+    R = Y.sign()
+
+    if show_logs == True:
+        n_u = Y.shape[0]
+        n_i = Y.shape[1]
+        n_total = n_u * n_i
+        n_ratings = Y.nnz
+        sparsity = n_ratings / n_total
+        n_ratings_per_user = Y.getnnz(axis=1)
+        n_ratings_per_item = Y.getnnz(axis=0)
+        print(f'Y shape: {Y.shape}')
+        print(f'R shape: {R.shape}')
+        print(f'n users: {n_u}')
+        print(f'n items: {n_i}')
+        print(f'n ratings: {n_ratings}')
+        print(f'matrix sparsity percentage: {round(sparsity * 100, 2)}%')
+        print(f"most active user rated {n_ratings_per_user.max()} movies.")
+        print(f"least active user rated {n_ratings_per_user.min()} movies.")
+        print(f"most rated movie has {n_ratings_per_item.max()} ratings.")
+        print(f"least rated movie has {n_ratings_per_item.min()} ratings.")
+    
+    return Y, R
+
  
 
 
@@ -107,12 +136,14 @@ def build_value_to_index(ratings: pd.DataFrame, column: str, start: int=0, show_
         column - the specified column in which to extract all
         unique values from
     """
-    # get user_id unique values and sort them
+    # get user_id unique values, the number of unique values
+    # and sort them
     unique_ids = ratings[column].unique()
+    n_unique_ids = ratings[column].nunique()
     unique_ids.sort()
 
     # build dictionary to map unique id's to new indeces
-    vals_to_index = _build_value_to_index(unique_ids, start)
+    vals_to_index = _build_value_to_index(unique_ids, n_unique_ids, start)
     sampled = _sample_first_n(vals_to_index, 15)
 
     if show_logs is True:
@@ -198,7 +229,7 @@ def _is_strictly_inc_by_k(unique_ids: list | pd.Series, k: int):
 
 
 
-def _build_value_to_index(unique_ids, start):
+def _build_value_to_index(unique_ids, n_unique_ids, start):
     """
     returns a dictionary mapping each unique user id to 
     sicne there may be users where there are e.g. user 1 maps to 0
@@ -210,11 +241,22 @@ def _build_value_to_index(unique_ids, start):
     this is akin to generating a word to index dictionary where each
     unique word based on their freqeuncy will be mapped from indeces 1 to |V|.
 
+    e.g. >>> start = 0
+    >>> val_to_index = dict(zip(ids, list(range(start, n_ids + start))))
+    >>> val_to_index
+    {1: 0, 2: 1, 3: 2, 4: 3, 5: 4}
+    >>>
+    >>> start = 10
+    >>> val_to_index = dict(zip(ids, list(range(start, n_ids + start))))
+    >>> val_to_index
+    {1: 10, 2: 11, 3: 12, 4: 13, 5: 14}
+
     args:
         unique_user_ids - an array/vector/set of all unique user id's from
         perhaps a ratings dataset
     """
-    return {id: index + start for index, id in enumerate(unique_ids)}
+
+    return dict(zip(unique_ids, list(range(start, n_unique_ids + start))))
 
 
 

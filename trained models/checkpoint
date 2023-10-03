@@ -1,0 +1,2 @@
+model_checkpoint_path: "DFM_juris_3m"
+all_model_checkpoint_paths: "DFM_juris_3m"

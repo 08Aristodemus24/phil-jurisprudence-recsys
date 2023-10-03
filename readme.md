@@ -183,9 +183,9 @@ So my question Could it be that my architecture is too complex or is my dataset 
 2. use github URL of larj-corpus dataset instead of local path in retrieving the rating data
 
 **To do:**
-1. try `python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.000075 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
-2. `python train_model.py -d juris-600k --protocol A --model_name FM --n_epochs 100 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
-3. in both models try bigger batch of 65536, 32768, 16384
+1. <s>try `python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 8 --n_epochs 100 --rec_alpha 0.000075 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`</s>
+2. <s>`python train_model.py -d juris-600k --protocol A --model_name FM --n_epochs 100 --rec_lambda 1 --rec_keep_prob 0.8 --batch_size 8192`
+3. in both models try bigger batch of 65536, 32768, 16384</s>
 4. in DFM try keep probability of 0.6, alpha of 0.0001, lambda of 1.2
 5. commands to use:
 * python train_model.py -d ml-1m --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0003 --rec_lambda 0.9 --batch_size 8192
@@ -201,6 +201,17 @@ So my question Could it be that my architecture is too complex or is my dataset 
 
 * python train_model.py -d juris-3m --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --batch_size 32768
 * python train_model.py -d juris-3m --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --rec_keep_prob 0.7 --batch_size 32768
+
+6. just generate top N/K predictions using precision@k, recall@k, and f1@k even with seemingly poor performance
+* https://medium.com/@m_n_malaeb/recall-and-precision-at-k-for-recommender-systems-618483226c54
+* https://www.jillcates.com/pydata-workshop/html/tutorial.html?fbclid=IwAR0QF6gMZpj7Fs_yboKO9_3gpqqRctbUEplwwhjDvp5kDQKPK0O8f5IiG14
+* https://github.com/ogbinar/upstat280/blob/main/01-recommender-systems-main/recommender-v2.ipynb
+
+7. what if I just turn the outputs without the sigmoid and only turn them on during prediction
+* https://colab.research.google.com/drive/172D4jishSgE3N7AO6U2OKAA_0wNnrMOq#scrollTo=OOSGiSkHTERy
+* https://stackoverflow.com/questions/51806852/cant-save-custom-subclassed-model
+* https://www.tensorflow.org/tutorials/keras/save_and_load#manually_save_weights
+* https://www.tensorflow.org/guide/keras/serialization_and_saving#part_ii_saving_and_loading_of_subclassed_models
 
 
 
@@ -244,7 +255,9 @@ epoch 19    train auc: 0.9516  acc: 0.8787    eval auc: 0.9136  acc: 0.8398    t
 
 This hypothesis has been rejected because even ordering the data doesn't have an effect on performance
 
-4. next hypothesis is, does embeddings have to do with it? When wang preprocessed the movie lens data set did both the train and cross data splits still preserve the number of unique users and unique items
+5. next hypothesis is, does embeddings have to do with it? When wang preprocessed the movie lens data set did both the train and cross data splits still preserve the number of unique users and unique items
+
+6. So determining whether the density of both ml-1m and juris-300k/juris-600k affected the training did not work since oth virtually still had the same sparsity and inversely density.
 
 **Questions:**
 
