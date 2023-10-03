@@ -4,6 +4,7 @@ from tensorflow.keras.metrics import MeanSquaredError as mse_metric
 from tensorflow.keras.callbacks import EarlyStopping
 
 from models.model_arcs import FM, DFM, MKR
+from models.test_arcs_b import PhilJurisFM
 from utilities.data_visualizers import view_vars, train_cross_results_v2
 from utilities.data_loaders import load_data_splits
 from utilities.data_preprocessors import get_length__build_value_to_index, build_results
@@ -41,11 +42,11 @@ if __name__ == "__main__":
     # n_users, n_items = Y.shape[1], Y.shape[0]
     # view_vars(Y, R, X, THETA, BETA)
 
-    # model = PhilJurisFM(Y, R, 
-    #     num_features=args.n_features, 
-    #     epochs=args.n_epochs, 
-    #     epoch_to_rec_at=args.epoch_to_rec_at, 
-    #     alpha=args.rec_alpha, 
-    #     lambda_=args.rec_lambda, 
-    #     regularization=args.regularization)
-    # history = model.train()
+    model = PhilJurisFM(Y, R, 
+        num_features=args.n_features, 
+        epochs=args.n_epochs, 
+        epoch_to_rec_at=args.epoch_to_rec_at, 
+        alpha=args.rec_alpha, 
+        lambda_=args.rec_lambda, 
+        regularization=args.regularization)
+    history = model.train()

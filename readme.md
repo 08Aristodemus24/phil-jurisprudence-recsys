@@ -199,6 +199,10 @@ So my question Could it be that my architecture is too complex or is my dataset 
 * python train_model.py -d juris-600k --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --batch_size 8192
 * python train_model.py -d juris-600k --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --rec_keep_prob 0.7 --batch_size 8192
 
+* python train_model.py -d juris-3m --protocol A --model_name FM --n_features 32 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --batch_size 32768
+* python train_model.py -d juris-3m --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --rec_keep_prob 0.7 --batch_size 32768
+
+
 
 **Problems:**
 1. <s>There is something wrong with split data or refactor raw ratings because there seems to be a mismatch in original number of user id's and item_id's. I suspect because user id and item ids are lessened because negative ratings are removed. Nevertheless following models and used dataset produce the ff. results:</s>
@@ -264,6 +268,10 @@ user 5|  0   |  1   |  0   |  1   |  0   |
 ```
 
 In training say for user 1 we learned to predict properly the interaction between this user and item 1 item 2 and item 4 as our part training set, which are 1, 0, and 0. And we wanted to predict the rest of the items of user 1 which are items 3 and 5 which have interactions 0 and 1 respectively. Should the model hypothetically not overfit then in our cross validation data if we predict 1 correctly as the interaction between item 5 and user 1 then we would have now recommended an item that they may potentially like
+
+3. It could be possible that even if movielens had 6000+ plus and 3000+ items that the reason why our models did not stall was becuase user-item matrix was not sparse. It could be that the reason why our model was stalling was because our user-item rating matrix was too sparse. An experiment that I could execute is to compare whether the movelens dataset is indeed dense in data and whether the juris-300k or juris-600k dataset is sparse.
+
+Should such expectations come to fruition it would mean that my hypothesis of the model performing well on movielens due to it not being sparse and the model not performing well on juris-300k/600k due to it being sparse would be correct and thus lead to the key conclusion that our dataset juris300k and juris-600k are in need of resynthesizing for the final time.
 
 **Articles:**
 1. Evaluating recommender systems

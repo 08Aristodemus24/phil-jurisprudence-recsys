@@ -37,7 +37,7 @@ def load_raw_movie_1m_ratings(dir_path):
     their rating of that item, and the timestamp in which they did so
     """
 
-    df = pd.read_csv(f'{dir_path}/ml_1m_ratings.dat', sep='::', header=None)
+    df = pd.read_csv(f'{dir_path}', sep='::', header=None)
     df.rename(columns={0: 'user_id', 1: 'item_id', 2: 'rating', 3: 'timestamp'}, inplace=True)
 
     return df
@@ -60,7 +60,7 @@ def load_raw_juris_300k_ratings(dir_path: str):
     and the synthetic rating created for that user-item interaction
     """
 
-    df = pd.read_csv(f'{dir_path}/juris_300k_ratings.csv', index_col=0)
+    df = pd.read_csv(f'{dir_path}', index_col=0)
     
     return df
 
@@ -71,7 +71,20 @@ def load_raw_juris_600k_ratings(dir_path: str):
     and the synthetic rating created for that user-item interaction
     """
 
-    df = pd.read_csv(f'{dir_path}/juris_600k_ratings.csv', index_col=0)
+    df = pd.read_csv(f'{dir_path}', index_col=0)
+    
+    return df
+
+
+def load_raw_juris_ratings(dir_path: str):
+    """
+    returns a the .csv file of the synthesized jurisprudence document data
+    set. Contains the columns of users, the items they "interacted with",
+    and the synthetic rating created for that user-item interaction
+    """
+
+    df = pd.read_csv(f'{dir_path}', delim_whitespace=True, header=None)
+    df.rename(columns={0: 'user_id', 1: 'item_id', 2: 'rating'}, inplace=True)
     
     return df
 

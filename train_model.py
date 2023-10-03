@@ -68,7 +68,7 @@ if __name__ == "__main__":
         batch_size=args.batch_size,
         epochs=args.n_epochs,
         validation_data=([cross_data['user_id'], cross_data['item_id']], cross_data['interaction']),
-        # callbacks=[EarlyStopping(monitor='val_f1_m', patience=50)]
+        callbacks=[EarlyStopping(monitor='val_f1_m', patience=4)]
     )
     
     train_cross_results_v2(

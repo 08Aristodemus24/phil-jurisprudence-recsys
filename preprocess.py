@@ -16,6 +16,7 @@ from utilities.data_preprocessors import (get_unique_values,
 
 from utilities.data_loaders import (load_raw_juris_300k_ratings,
     load_raw_juris_600k_ratings,
+    load_raw_juris_ratings,
     load_raw_movie_1m_ratings, 
     load_raw_movie_20k_kg, 
     load_item_index2entity_id_file)
@@ -31,12 +32,14 @@ def main_preprocess(dataset: str, protocol: str, split_method: str, show_logs: b
     in the dataset
     """
     print(f'Commencing preprocessing of {dataset}...')
+    print(dataset)
 
     # dataset to choose from
     datasets = {
-        'juris-300k': load_raw_juris_300k_ratings('./data/juris-300k'),
-        'juris-600k': load_raw_juris_600k_ratings('./data/juris-600k'),
-        'ml-1m': load_raw_movie_1m_ratings('./data/ml-1m')
+        'juris-300k': load_raw_juris_300k_ratings('./data/juris-300k/juris_300k_ratings.csv'),
+        'juris-600k': load_raw_juris_600k_ratings('./data/juris-600k/juris_600k_ratings.csv'),
+        'juris-3m': load_raw_juris_ratings('https://raw.githubusercontent.com/08Aristodemus24/LaRJ-Corpus/master/labor%20related%20jurisprudence/juris_2921000_ratings.txt'),
+        'ml-1m': load_raw_movie_1m_ratings('./data/ml-1m/ml_1m_ratings.dat')
     }
 
     data = datasets[dataset]
