@@ -203,16 +203,18 @@ So my question Could it be that my architecture is too complex or is my dataset 
 * python train_model.py -d juris-3m --protocol A --model_name DFM --n_features 32 --layers_dims 32 16 16 16 8 8 4 4 3 1 --n_epochs 100 --rec_alpha 0.0001 --rec_lambda 0.9 --rec_keep_prob 0.7 --batch_size 32768
 
 6. just generate top N/K predictions using precision@k, recall@k, and f1@k even with seemingly poor performance
-* https://medium.com/@m_n_malaeb/recall-and-precision-at-k-for-recommender-systems-618483226c54
-* https://www.jillcates.com/pydata-workshop/html/tutorial.html?fbclid=IwAR0QF6gMZpj7Fs_yboKO9_3gpqqRctbUEplwwhjDvp5kDQKPK0O8f5IiG14
-* https://github.com/ogbinar/upstat280/blob/main/01-recommender-systems-main/recommender-v2.ipynb
 
 7. what if I just turn the outputs without the sigmoid and only turn them on during prediction
-* https://colab.research.google.com/drive/172D4jishSgE3N7AO6U2OKAA_0wNnrMOq#scrollTo=OOSGiSkHTERy
-* https://stackoverflow.com/questions/51806852/cant-save-custom-subclassed-model
-* https://www.tensorflow.org/tutorials/keras/save_and_load#manually_save_weights
-* https://www.tensorflow.org/guide/keras/serialization_and_saving#part_ii_saving_and_loading_of_subclassed_models
 
+8. try pytorch
+9. try flattening the embeddings before pushing into dot layer
+10. try using different initializer
+11. try doing it on Google collab
+12. rework model by building a non eager model by using gradient tape
+13. will consist of turning juris-600k to rating matrix using csr_matrix()
+14. try implementing model that trains only and see performance improvement there once decent implement model with validation data split
+15. implement batch training in gradient tape
+16. then implementing splitting training dataset by batches
 
 
 **Problems:**
@@ -251,13 +253,13 @@ epoch 18    train auc: 0.9509  acc: 0.8777    eval auc: 0.9140  acc: 0.8401    t
 epoch 19    train auc: 0.9516  acc: 0.8787    eval auc: 0.9136  acc: 0.8398    test auc: 0.9129  acc: 0.8386
 ```
 
-4. So my problem lies with where I preprocessed the data because in wang's paper they managed to change the order of the user id's themselves such that they were all ordered from the first user (even if it had user id 1000 for instance) which was now set to a new id 0 representing a user with the positive item set. 
+4. <s>So my problem lies with where I preprocessed the data because in wang's paper they managed to change the order of the user id's themselves such that they were all ordered from the first user (even if it had user id 1000 for instance) which was now set to a new id 0 representing a user with the positive item set. 
 
-This hypothesis has been rejected because even ordering the data doesn't have an effect on performance
+This hypothesis has been rejected because even ordering the data doesn't have an effect on performance</s>
 
-5. next hypothesis is, does embeddings have to do with it? When wang preprocessed the movie lens data set did both the train and cross data splits still preserve the number of unique users and unique items
+5. <s>next hypothesis is, does embeddings have to do with it? When wang preprocessed the movie lens data set did both the train and cross data splits still preserve the number of unique users and unique items</s>
 
-6. So determining whether the density of both ml-1m and juris-300k/juris-600k affected the training did not work since oth virtually still had the same sparsity and inversely density.
+6. <s>So determining whether the density of both ml-1m and juris-300k/juris-600k affected the training did not work since oth virtually still had the same sparsity and inversely density.</s>
 
 **Questions:**
 
@@ -286,10 +288,39 @@ In training say for user 1 we learned to predict properly the interaction betwee
 
 Should such expectations come to fruition it would mean that my hypothesis of the model performing well on movielens due to it not being sparse and the model not performing well on juris-300k/600k due to it being sparse would be correct and thus lead to the key conclusion that our dataset juris300k and juris-600k are in need of resynthesizing for the final time.
 
+4. I understand now that item to item and user to user based recommendation systems simply use the row vectors of each users rated items or column vectors of each items of every user that has ever rated them from the user item rating matrix. We take these rows or columns and feed them perhaps to KNN, K-means to determine the clusters of these datapoints because every row of the user rating matrix is a user that are vectors of features we can cluster (since we know there is no target variablesto be predicted and therefore will be unsupervised) or every column of the the user item rating matrix which we know are items we can also cluster
+
+5. the task was to learn the embedding matrices of users and items right, such that these matrices and moreover the bias vectors as well approximate the user item rating matrix. What we do to get missing ratings is just I theorize to multiply the item embedding matrix in order to get such might ratings and recommend that to the user
+
+so the task is to generate a list of recommendations of length K and
+
+6. A known problem in recommendation sometimes called "Harry Potter" effect - (almost) everybody likes Harry Potter. So most automated procedures will find out which items are generally popular, and recommend those to the users. You can either filter out very popular items, or multiply the predicted rating by a factor that is lower the more globally popular an item is. Ah so this is why those popular items were removed in that professors notebook demo
+
 **Articles:**
 1. Evaluating recommender systems
 * https://neptune.ai/blog/how-to-test-recommender-system
 * https://www.shaped.ai/blog/evaluating-recommendation-systems-part-1
+
+2. precision and recall at k
+* https://medium.com/@m_n_malaeb/recall-and-precision-at-k-for-recommender-systems-618483226c54
+* https://www.jillcates.com/pydata-workshop/html/tutorial.html?fbclid=IwAR0QF6gMZpj7Fs_yboKO9_3gpqqRctbUEplwwhjDvp5kDQKPK0O8f5IiG14
+* https://github.com/ogbinar/upstat280/blob/main/01-recommender-systems-main/recommender-v2.ipynb
+
+3. savin model weights and model architecture
+* https://colab.research.google.com/drive/172D4jishSgE3N7AO6U2OKAA_0wNnrMOq#scrollTo=OOSGiSkHTERy
+* https://stackoverflow.com/questions/51806852/cant-save-custom-subclassed-model
+* https://www.tensorflow.org/tutorials/keras/save_and_load#manually_save_weights
+* https://www.tensorflow.org/guide/keras/serialization_and_saving#part_ii_saving_and_loading_of_subclassed_models
+
+4. why validation accuracy and auc increase and loss increases too
+* https://stats.stackexchange.com/questions/548010/why-would-auc-on-a-validation-set-increase-while-loss-increases
+* https://datamachines.com/blog/auc-vs-log-loss
+* https://stats.stackexchange.com/questions/282160/how-is-it-possible-that-validation-loss-is-increasing-while-validation-accuracy
+* https://ai.stackexchange.com/questions/24407/why-does-the-accuracy-drop-while-the-loss-decrease-as-the-number-of-epochs-incr
+
+5. traning a model by batch in non-eager execution mode
+* https://youtu.be/Rx7pPuosoLk?si=WxEha38gBhMkMkmm
+
 
 
 ## Analyzing embeddings

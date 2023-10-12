@@ -70,8 +70,8 @@ if __name__ == "__main__":
         callbacks=[EarlyStopping(monitor='val_f1_m', patience=10)] if args.protocol == "A" else [EarlyStopping(monitor='val_root_mean_squared_error', patience=10)]
     )
     
-    metrics_to_use = metrics=['loss', 'val_loss', 'binary_crossentropy', 'val_binary_crossentropy', 'binary_accuracy', 'val_binary_accuracy', 'precision', 'val_precision', 'recall', 'val_recall', 'f1_m', 'val_f1_m', 'auc', 'val_auc'] if args.protocol == "A" else ['loss', 'val_loss', 'mean_squared_error', 'val_mean_squared_error', 'root_mean_squared_error', 'val_root_mean_squared_error']
-    for index in range(0, len(metrics) - 1, 2):
+    metrics_to_use = ['loss', 'val_loss', 'binary_crossentropy', 'val_binary_crossentropy', 'binary_accuracy', 'val_binary_accuracy', 'precision', 'val_precision', 'recall', 'val_recall', 'f1_m', 'val_f1_m', 'auc', 'val_auc'] if args.protocol == "A" else ['loss', 'val_loss', 'mean_squared_error', 'val_mean_squared_error', 'root_mean_squared_error', 'val_root_mean_squared_error']
+    for index in range(0, len(metrics_to_use) - 1, 2):
         # >>> list(range(0, 5, 2))
         # [0, 2, 4]
         metrics_indeces = (index, index + 1)
