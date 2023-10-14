@@ -1,5 +1,16 @@
-# **STILL IN PRODUCTION**
-This is the second phase of my undergraduate thesis which will recommend jurisprudence documents to legal practitioners specializing in the labor sector. Based on the paper of Wang, H. et. al. 
+# **DISCONTINUED**
+the problem is that yes the model gives results, but unreliable results, because it is supposed to have its metrics improve, and even though the models architecture and overall code seem to have no errors syntactically nor errors programmatically/logically the model evokes suspicion of an existing bug that is unsolvable thus makes the result it gives dubious at best
+
+The knowledge graph second of all will be an even bigger challenge because us students are only limited people and our knowledge is limited. We do not know how to curate our own knowledge graph, such that it strictly follows the paper we base our thesis with, and such that it would ensure sure that when it is inputted to the model, the model will give reliable results
+
+For this we deeply believe that our initially proposed title will never come to fruition and what we will be only capable of passing is or are the models that we have built right now that are less ideal to our initially proposed model that were supposed to be compared to it.
+
+This is what we truly have right now
+
+
+
+# Description:
+This is the second phase of my undergraduate thesis which will recommend jurisprudence documents to legal practitioners specializing in the labor sector. Based on the paper of Wang, H. et. al.
 
 
 
@@ -320,6 +331,8 @@ so the task is to generate a list of recommendations of length K and
 
 5. traning a model by batch in non-eager execution mode
 * https://youtu.be/Rx7pPuosoLk?si=WxEha38gBhMkMkmm
+* http://sujitpal.blogspot.com/2019/04/matrix-factorization-as-gradient.html
+* https://stackoverflow.com/questions/64605596/simple-way-of-performing-matrix-factorization-with-tensorflow-2
 
 
 
