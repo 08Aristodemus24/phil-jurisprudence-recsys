@@ -13,7 +13,7 @@ from tensorflow.keras.metrics import (BinaryAccuracy,
 )
 
 from models.test_arcs_a import FM as FM_r, DFM as DFM_r
-from models.model_arcs import FM, DFM
+from models.test_arcs_b import FM, DFM
 from metrics.custom_metrics import f1_m
 
 def load_model(model_name: str, protocol: str, n_users: int, n_items: int, n_features: int, layers_dims: list, epoch_to_rec_at: int, rec_alpha: float, rec_lambda: float, rec_keep_prob: float, regularization: str):
