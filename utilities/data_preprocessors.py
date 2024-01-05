@@ -35,7 +35,7 @@ def create_rating_int_matrix(ratings: pd.DataFrame, target: pd.Series | list | n
     
     return Y, R
 
- 
+
 
 
 def has_duplicates(arr: list | np.ndarray) -> bool:

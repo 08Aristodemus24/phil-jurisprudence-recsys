@@ -152,14 +152,15 @@ def view_value_frequency(value_counts:pd.Series, colormap:str, title: str, kind:
         plt.show()
 
 
-def visualize_graph(kg, limit: str=500, edge: str='film.film.genre', node_color: str='skyblue'):
+def visualize_graph(kg, node_limit: str=500, edge: str='film.film.genre', node_color: str='skyblue'):
     """
     args:
         kg - is the knowledge graph represented as a dataframe with columns head, relation, tail
         which are the triples that make up the knowledge graph
     """
+    
     # see first 500 rows
-    G = nx.from_pandas_edgelist(kg[:limit].loc[kg['relation'] == edge], source='head', target='tail', edge_attr=True, create_using=nx.MultiDiGraph())
+    G = nx.from_pandas_edgelist(kg[:node_limit].loc[kg['relation'] == edge], source='head', target='tail', edge_attr=True, create_using=nx.MultiDiGraph())
     pos = nx.spring_layout(G, k=0.5)
 
     plt.figure(figsize=(12, 12))
